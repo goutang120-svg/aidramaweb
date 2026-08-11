@@ -36,12 +36,12 @@
         <el-descriptions-item label="整体进度">
           <div class="progress-with-text">
             <el-progress
-              :percentage="project.progress"
-              :color="progressColor(project.progress)"
+              :percentage="projectProgress"
+              :color="progressColor(projectProgress)"
               :stroke-width="8"
               style="flex: 1; margin-right: 8px;"
             />
-            <span class="progress-text">{{ project.progress }}%</span>
+            <span class="progress-text">{{ projectProgress }}%</span>
           </div>
         </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDate(project.createdAt) }}</el-descriptions-item>
@@ -52,12 +52,42 @@
       </el-descriptions>
     </el-card>
 
-    <!-- 统计卡片行 -->
+    <!-- 统计卡片行 - 可点击跳转 -->
     <el-row :gutter="16" class="stats-row" v-if="project.id">
-      <el-col v-for="stat in detailStats" :key="stat.label" :xs="12" :sm="8" :md="4">
-        <div class="stat-card" :style="{ borderTopColor: stat.color }">
-          <div class="stat-value">{{ stat.value }}</div>
-          <div class="stat-label">{{ stat.label }}</div>
+      <el-col :xs="12" :sm="8" :md="4">
+        <div class="stat-card" style="border-top-color: #e040fb" @click="$router.push('/characters')">
+          <div class="stat-value">{{ stats.characters }}</div>
+          <div class="stat-label">人物</div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="8" :md="4">
+        <div class="stat-card" style="border-top-color: #ff9800" @click="$router.push('/scenes')">
+          <div class="stat-value">{{ stats.scenes }}</div>
+          <div class="stat-label">场景</div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="8" :md="4">
+        <div class="stat-card" style="border-top-color: #00bcd4" @click="$router.push('/seasons')">
+          <div class="stat-value">{{ stats.seasons }}</div>
+          <div class="stat-label">分季</div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="8" :md="4">
+        <div class="stat-card" style="border-top-color: #3f51b5" @click="$router.push('/episodes')">
+          <div class="stat-value">{{ stats.episodes }}</div>
+          <div class="stat-label">分集</div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="8" :md="4">
+        <div class="stat-card" style="border-top-color: #ff5722" @click="$router.push('/shots')">
+          <div class="stat-value">{{ stats.shots }}</div>
+          <div class="stat-label">镜头</div>
+        </div>
+      </el-col>
+      <el-col :xs="12" :sm="8" :md="4">
+        <div class="stat-card" style="border-top-color: #9c27b0" @click="$router.push('/assets')">
+          <div class="stat-value">{{ stats.assets }}</div>
+          <div class="stat-label">资源</div>
         </div>
       </el-col>
     </el-row>
@@ -67,35 +97,45 @@
       <template #header>
         <div class="episode-card-header">
           <span>分集进度</span>
-          <span class="episode-subtitle">共 {{ episodes.length }} 集</span>
+          <div class="header-right">
+            <span class="episode-subtitle">共 {{ episodes.length }} 集</span>
+            <el-button size="small" type="primary" plain @click="$router.push('/seasons')">
+              <el-icon><Plus /></el-icon> 管理分季
+            </el-button>
+          </div>
         </div>
       </template>
 
-      <div v-if="episodes.length === 0" class="empty-hint">
-        <el-empty description="暂无分集数据" />
+      <div v-if="loadingEpisodes" class="loading-wrap">
+        <el-icon class="loading-spin"><Loading /></el-icon>
+      </div>
+      <div v-else-if="episodes.length === 0" class="empty-hint">
+        <el-empty description="暂无分集数据，请先添加分季">
+          <el-button type="primary" @click="$router.push('/seasons')">去添加分季</el-button>
+        </el-empty>
       </div>
 
       <div v-else class="episode-list">
-        <div v-for="ep in episodes" :key="ep.id" class="episode-item">
+        <div v-for="ep in episodes" :key="ep.id" class="episode-item" @click="$router.push(`/episodes/${ep.id}`)">
           <div class="episode-info">
-            <span class="episode-label">第{{ ep.episodeNumber }}集</span>
-            <span class="episode-title">{{ ep.title }}</span>
+            <span class="episode-label">第{{ ep.episodeNo }}集</span>
+            <span class="episode-title">{{ ep.title || '未命名' }}</span>
             <el-tag
-              :color="statusColor(ep.status)"
+              :color="statusColor(ep.status || ep.scriptStatus)"
               effect="dark"
               size="small"
               style="border-color: transparent;"
             >
-              {{ statusLabel(ep.status) }}
+              {{ statusLabel(ep.status || ep.scriptStatus) }}
             </el-tag>
           </div>
           <el-progress
-            :percentage="ep.progress"
-            :color="progressColor(ep.progress)"
+            :percentage="ep.progress || 0"
+            :color="progressColor(ep.progress || 0)"
             :stroke-width="6"
             style="flex: 1; max-width: 280px; min-width: 120px;"
           />
-          <span class="episode-progress-text">{{ ep.progress }}%</span>
+          <span class="episode-progress-text">{{ ep.progress || 0 }}%</span>
         </div>
       </div>
     </el-card>
@@ -151,24 +191,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Edit } from '@element-plus/icons-vue'
+import { Edit, Plus, Loading } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { getProject, updateProject } from '@/api/index'
+import { getProject, updateProject, listAll, listCharacters, listScenes, listProps, getAssets } from '@/api/index'
 import type { Project } from '@/types'
 
 interface EpisodeRow {
   id: number
-  episodeNumber: number
+  episodeNo: number
   title: string
-  status: string
+  status?: string
+  scriptStatus?: string
   progress: number
 }
 
 const route = useRoute()
 const loading = ref(false)
+const loadingEpisodes = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
 const formRef = ref<FormInstance>()
@@ -187,23 +229,24 @@ const formRules: FormRules = {
   type: [{ required: true, message: '请选择项目类型', trigger: 'change' }],
 }
 
-const detailStats = ref([
-  { label: '人物', value: 0, color: '#e040fb' },
-  { label: '场景', value: 0, color: '#ff9800' },
-  { label: '分季', value: 0, color: '#00bcd4' },
-  { label: '分集', value: 0, color: '#00bcd4' },
-  { label: '镜头', value: 0, color: '#ff5722' },
-  { label: '资源', value: 0, color: '#9c27b0' },
-])
+const stats = ref({
+  characters: 0,
+  scenes: 0,
+  seasons: 0,
+  episodes: 0,
+  shots: 0,
+  assets: 0,
+})
 
-// Simulated episodes data — in production this would come from an API
-const episodes = ref<EpisodeRow[]>([
-  { id: 1, episodeNumber: 1, title: '序章', status: 'COMPLETED', progress: 100 },
-  { id: 2, episodeNumber: 2, title: '相遇', status: 'IN_PROGRESS', progress: 65 },
-  { id: 3, episodeNumber: 3, title: '冲突', status: 'IN_PROGRESS', progress: 30 },
-  { id: 4, episodeNumber: 4, title: '转折', status: 'NOT_STARTED', progress: 0 },
-  { id: 5, episodeNumber: 5, title: '高潮', status: 'NOT_STARTED', progress: 0 },
-])
+const episodes = ref<EpisodeRow[]>([])
+
+const projectProgress = computed(() => {
+  const { characters, scenes, episodes: eps, shots } = stats.value
+  if (!characters && !scenes && !eps && !shots) return 0
+  if (stats.value.episodes > 0 && stats.value.shots > 0) return 50
+  if (stats.value.episodes > 0 || stats.value.shots > 0) return 25
+  return 10
+})
 
 function statusLabel(status: string): string {
   const map: Record<string, string> = {
@@ -211,7 +254,7 @@ function statusLabel(status: string): string {
     IN_PROGRESS: '进行中',
     NOT_STARTED: '未开始',
   }
-  return map[status] || status
+  return map[status] || status || '未开始'
 }
 
 function statusColor(status: string): string {
@@ -264,18 +307,87 @@ async function fetchProject() {
   try {
     const res = await getProject(id)
     project.value = res.data.data as Project
-
-    // Set simulated stats based on project progress
-    detailStats.value[0].value = Math.floor(Math.random() * 20) + 2
-    detailStats.value[1].value = Math.floor(Math.random() * 15) + 1
-    detailStats.value[2].value = 1
-    detailStats.value[3].value = episodes.value.length
-    detailStats.value[4].value = episodes.value.length * 4 + Math.floor(Math.random() * 10)
-    detailStats.value[5].value = Math.floor(Math.random() * 50) + 10
   } catch {
     // handled by interceptor
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchStats() {
+  const id = Number(route.params.id)
+  if (!id) return
+
+  try {
+    // Fetch counts in parallel
+    const [charRes, sceneRes, propRes, assetRes] = await Promise.allSettled([
+      listCharacters(id, { page: 1, pageSize: 1 }),
+      listScenes(id, { page: 1, pageSize: 1 }),
+      listProps(id, { page: 1, pageSize: 1 }),
+      getAssets({ projectId: id, page: 1, pageSize: 1 }),
+    ])
+
+    if (charRes.status === 'fulfilled') {
+      const data = (charRes.value as any).data?.data
+      stats.value.characters = data?.total || data?.records?.length || 0
+    }
+    if (sceneRes.status === 'fulfilled') {
+      const data = (sceneRes.value as any).data?.data
+      stats.value.scenes = data?.total || data?.records?.length || 0
+    }
+    if (propRes.status === 'fulfilled') {
+      const data = (propRes.value as any).data?.data
+      stats.value.props = data?.total || data?.records?.length || 0
+    }
+    if (assetRes.status === 'fulfilled') {
+      const data = (assetRes.value as any).data?.data
+      stats.value.assets = data?.total || data?.records?.length || 0
+    }
+
+    // Fetch seasons
+    const seasonsRes = await listAll(`/projects/${id}/seasons`, { page: 1, pageSize: 100 })
+    const seasonsData = (seasonsRes as any).data?.data?.records || []
+    stats.value.seasons = seasonsData.length
+
+    // Fetch episodes from all seasons and calculate shots
+    loadingEpisodes.value = true
+    let totalEpisodes = 0
+    let totalShots = 0
+    const allEpisodes: EpisodeRow[] = []
+
+    for (const season of seasonsData) {
+      try {
+        const epRes = await listAll(`/seasons/${season.id}/episodes`, { page: 1, pageSize: 100 })
+        const epData = (epRes as any).data?.data?.records || []
+        totalEpisodes += epData.length
+
+        for (const ep of epData) {
+          allEpisodes.push({
+            id: ep.id,
+            episodeNo: ep.episodeNo || ep.episodeNumber || 0,
+            title: ep.title || '',
+            status: ep.status,
+            scriptStatus: ep.scriptStatus,
+            progress: ep.progress || 0,
+          })
+
+          // Fetch shot count for each episode
+          try {
+            const shotRes = await listAll(`/episodes/${ep.id}/shots`, { page: 1, pageSize: 1 })
+            const shotData = (shotRes as any).data?.data
+            totalShots += shotData?.total || (shotData?.records?.length || 0)
+          } catch { /* ignore */ }
+        }
+      } catch { /* continue */ }
+    }
+
+    stats.value.episodes = totalEpisodes
+    stats.value.shots = totalShots
+    episodes.value = allEpisodes
+  } catch (e) {
+    console.error('Failed to fetch project stats:', e)
+  } finally {
+    loadingEpisodes.value = false
   }
 }
 
@@ -312,6 +424,7 @@ async function handleSubmit() {
 
 onMounted(() => {
   fetchProject()
+  fetchStats()
 })
 </script>
 
@@ -327,9 +440,9 @@ onMounted(() => {
 
 /* 项目信息卡片 */
 .info-card {
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   margin-bottom: 20px;
 }
 
@@ -347,14 +460,14 @@ onMounted(() => {
 }
 
 .project-name {
-  color: #c0c0d0;
+  color: var(--text-primary);
   font-size: 20px;
   font-weight: 700;
   margin: 0;
 }
 
 .project-code {
-  color: #5a5a7e;
+  color: var(--text-muted);
   font-size: 13px;
   font-family: monospace;
 }
@@ -370,7 +483,7 @@ onMounted(() => {
 
 .progress-text {
   font-size: 13px;
-  color: #c0c0d0;
+  color: var(--text-secondary);
   font-weight: 600;
   min-width: 40px;
   text-align: right;
@@ -382,51 +495,60 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: #1a1a2e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
   padding: 18px 16px;
   margin-bottom: 14px;
-  border: 1px solid #2a2a3e;
+  border: 1px solid var(--border-color);
   border-top: 3px solid transparent;
   text-align: center;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-glow);
 }
 
 .stat-value {
   font-size: 26px;
   font-weight: 700;
-  color: #e8a850;
+  color: var(--primary-color);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #808090;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
 /* 分集进度 */
 .episode-card {
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
 }
 
 .episode-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #c0c0d0;
+  color: var(--text-primary);
   font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .episode-subtitle {
   font-size: 13px;
-  color: #808090;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
@@ -440,12 +562,15 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid #22223a;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.episode-item:last-child {
-  border-bottom: none;
+.episode-item:hover {
+  background: var(--bg-card-hover);
 }
 
 .episode-info {
@@ -456,14 +581,14 @@ onMounted(() => {
 }
 
 .episode-label {
-  color: #e8a850;
+  color: var(--primary-color);
   font-weight: 600;
   font-size: 13px;
   white-space: nowrap;
 }
 
 .episode-title {
-  color: #c0c0d0;
+  color: var(--text-secondary);
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
@@ -473,12 +598,29 @@ onMounted(() => {
 
 .episode-progress-text {
   font-size: 13px;
-  color: #808090;
+  color: var(--text-muted);
   min-width: 36px;
   text-align: right;
 }
 
 .empty-hint {
   padding: 30px 0;
+}
+
+.loading-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.loading-spin {
+  font-size: 24px;
+  color: var(--primary-color);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>
