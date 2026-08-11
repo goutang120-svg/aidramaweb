@@ -245,7 +245,7 @@ async function fetchUsage() {
   loadingUsage.value = true
   try {
     const res = await listAll(`/projects/${appStore.currentProjectId}/props/${prop.value.id}/usage`)
-    usageData.value = res.data.data as UsageData
+    usageData.value = res.data.data as unknown as UsageData
   } catch { usageData.value = null } finally { loadingUsage.value = false }
 }
 
