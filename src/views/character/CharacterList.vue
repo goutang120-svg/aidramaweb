@@ -145,15 +145,15 @@ onMounted(fetchCharacters)
 <style scoped>
 .character-list { height: 100%; display: flex; flex-direction: column; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-.page-title { color: #e8a850; font-size: 20px; font-weight: 600; }
+.page-title { color: var(--primary-color); font-size: 20px; font-weight: 600; }
 .header-actions { display: flex; gap: 12px; align-items: center; }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-.char-card { background: #16162a; border: 1px solid #2a2a3e; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
-.char-card:hover { transform: translateY(-2px); border-color: #e8a850; }
+.char-card { background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s ease; }
+.char-card:hover { transform: translateY(-2px); border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .card-avatar { display: flex; justify-content: center; margin-bottom: 12px; }
-.avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #e8a850, #d49230); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #1a1a2e; }
+.avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; }
 .card-info { text-align: center; }
-.char-name { color: #c0c0d0; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
-.char-identity { color: #808090; font-size: 13px; margin-bottom: 8px; }
+.char-name { color: var(--text-secondary); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.char-identity { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
 </style>

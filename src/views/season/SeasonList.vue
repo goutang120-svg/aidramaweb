@@ -264,8 +264,8 @@ watch(projectId, (newId) => {
   margin-bottom: 16px;
 }
 .page-title {
-  color: #c0c0d0; font-size: 16px; font-weight: 600;
-  padding-left: 10px; border-left: 3px solid #e8a850;
+  color: var(--text-secondary); font-size: 16px; font-weight: 600;
+  padding-left: 10px; border-left: 3px solid var(--primary-color);
 }
 
 /* 卡片 */
@@ -273,35 +273,35 @@ watch(projectId, (newId) => {
 .empty-wrap { padding: 60px 0; }
 
 .season-card {
-  background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 8px;
+  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
   margin-bottom: 16px; cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
-.season-card:hover { border-color: #e8a850; transform: translateY(-2px); }
-.season-card.expanded { border-color: #e8a850; }
+.season-card:hover { border-color: var(--primary-color); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+.season-card.expanded { border-color: var(--primary-color); }
 
 .season-header { padding: 16px; }
-.season-no { color: #e8a850; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-.season-name { color: #c0c0d0; font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+.season-no { color: var(--primary-color); font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.season-name { color: var(--text-secondary); font-size: 16px; font-weight: 600; margin-bottom: 10px; }
 .season-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.season-episodes { color: #6a6a7e; font-size: 13px; }
-.season-desc { color: #808090; font-size: 13px; margin-top: 8px; line-height: 1.5; }
-.season-actions { display: flex; gap: 4px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a2a3e; }
+.season-episodes { color: var(--text-muted); font-size: 13px; }
+.season-desc { color: var(--text-muted); font-size: 13px; margin-top: 8px; line-height: 1.5; }
+.season-actions { display: flex; gap: 4px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
 
 /* 展开集数 */
-.episode-list { border-top: 1px solid #2a2a3e; padding: 12px 16px 16px; }
+.episode-list { border-top: 1px solid var(--border-color); padding: 12px 16px 16px; }
 .episode-list-header {
   display: flex; align-items: center; justify-content: space-between;
-  color: #808090; font-size: 13px; margin-bottom: 10px;
+  color: var(--text-muted); font-size: 13px; margin-bottom: 10px;
 }
 .episode-items { min-height: 40px; }
-.episode-empty { color: #6a6a7e; font-size: 13px; padding: 20px 0; text-align: center; }
+.episode-empty { color: var(--text-muted); font-size: 13px; padding: 20px 0; text-align: center; }
 .episode-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 6px; background: #16162a;
+  padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-input);
   margin-bottom: 6px; cursor: pointer; transition: background 0.2s;
 }
-.episode-item:hover { background: #2a2a3e; }
-.ep-no { color: #e8a850; font-size: 13px; font-weight: 500; min-width: 36px; }
-.ep-title { color: #c0c0d0; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.episode-item:hover { background: var(--bg-card-hover); }
+.ep-no { color: var(--primary-color); font-size: 13px; font-weight: 500; min-width: 36px; }
+.ep-title { color: var(--text-secondary); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

@@ -326,10 +326,10 @@ watch(projectId, (newId) => {
 }
 .toolbar-right { display: flex; align-items: center; gap: 10px; }
 .page-title {
-  color: #c0c0d0; font-size: 16px; font-weight: 600;
-  padding-left: 10px; border-left: 3px solid #e8a850;
+  color: var(--text-secondary); font-size: 16px; font-weight: 600;
+  padding-left: 10px; border-left: 3px solid var(--primary-color);
 }
 .shot-content { min-height: 120px; }
 .empty-wrap { padding: 60px 0; }
-.shot-no-cell { color: #e8a850; font-weight: 500; }
+.shot-no-cell { color: var(--primary-color); font-weight: 500; }
 </style>

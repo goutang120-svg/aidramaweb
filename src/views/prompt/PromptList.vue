@@ -305,17 +305,17 @@ watch(projectId, (newId) => {
   margin-bottom: 16px;
 }
 .page-title {
-  color: #c0c0d0; font-size: 16px; font-weight: 600;
-  padding-left: 10px; border-left: 3px solid #e8a850;
+  color: var(--text-secondary); font-size: 16px; font-weight: 600;
+  padding-left: 10px; border-left: 3px solid var(--primary-color);
 }
 .prompt-content { min-height: 120px; }
 .empty-wrap { padding: 60px 0; }
 .content-preview {
-  color: #c0c0d0; font-family: 'Courier New', monospace; font-size: 13px;
+  color: var(--text-secondary); font-family: 'Courier New', monospace; font-size: 13px;
 }
-.negative-preview { color: #e04040; font-size: 12px; }
-.no-data { color: #6a6a7e; }
+.negative-preview { color: var(--accent-color); font-size: 12px; }
+.no-data { color: var(--text-muted); }
 .relation-cell {
-  display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; color: #808090;
+  display: flex; flex-wrap: wrap; gap: 4px; font-size: 12px; color: var(--text-muted);
 }
 </style>

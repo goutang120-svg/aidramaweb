@@ -158,14 +158,14 @@ onMounted(fetchScenes)
 <style scoped>
 .scene-list { height: 100%; display: flex; flex-direction: column; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
-.page-title { color: #e8a850; font-size: 20px; font-weight: 600; }
+.page-title { color: var(--primary-color); font-size: 20px; font-weight: 600; }
 .header-actions { display: flex; gap: 12px; align-items: center; }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-.scene-card { background: #16162a; border: 1px solid #2a2a3e; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
-.scene-card:hover { transform: translateY(-2px); border-color: #e8a850; }
+.scene-card { background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s ease; }
+.scene-card:hover { transform: translateY(-2px); border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.scene-name { color: #c0c0d0; font-size: 15px; font-weight: 600; }
-.card-detail { display: flex; align-items: center; gap: 6px; color: #808090; font-size: 13px; margin-bottom: 10px; }
+.scene-name { color: var(--text-secondary); font-size: 15px; font-weight: 600; }
+.card-detail { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 13px; margin-bottom: 10px; }
 .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 </style>

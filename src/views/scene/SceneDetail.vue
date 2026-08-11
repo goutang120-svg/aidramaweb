@@ -273,39 +273,40 @@ watch(activeTab, (tab) => {
 <style scoped>
 .scene-detail { height: 100%; display: flex; flex-direction: column; }
 .page-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.page-title { color: #e8a850; font-size: 20px; font-weight: 600; }
+.page-title { color: var(--primary-color); font-size: 20px; font-weight: 600; }
 
 .detail-content { flex: 1; overflow-y: auto; }
-.info-card { background: #16162a; border: 1px solid #2a2a3e; margin-bottom: 16px; }
+.info-card { background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 16px; }
 
 .asset-toolbar { margin-bottom: 12px; }
 .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
-.asset-item { background: #16162a; border: 1px solid #2a2a3e; border-radius: 8px; overflow: hidden; }
+.asset-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; transition: all 0.3s ease; }
+.asset-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .asset-image { width: 100%; height: 160px; display: block; }
-.asset-placeholder { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; background: #1a1a2e; color: #808090; }
-.asset-name { padding: 8px; font-size: 12px; color: #a0a0b0; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asset-placeholder { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); color: var(--text-muted); }
+.asset-name { padding: 8px; font-size: 12px; color: var(--text-secondary); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .usage-section { margin-bottom: 20px; }
-.section-title { color: #e8a850; font-size: 15px; margin-bottom: 10px; }
+.section-title { color: var(--primary-color); font-size: 15px; margin-bottom: 10px; }
 .usage-tag { margin-right: 8px; margin-bottom: 8px; }
-.no-data { color: #808090; font-size: 13px; }
+.no-data { color: var(--text-muted); font-size: 13px; }
 .shot-list { display: flex; flex-direction: column; gap: 6px; }
 .shot-item {
   display: flex; align-items: center; gap: 12px;
-  padding: 8px 12px; background: #1a1a2e; border: 1px solid #2a2a3e;
-  border-radius: 6px; cursor: pointer; transition: border-color 0.2s;
+  padding: 8px 12px; background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm); cursor: pointer; transition: all 0.3s ease;
 }
-.shot-item:hover { border-color: #e8a850; }
-.shot-code { color: #e8a850; font-size: 13px; font-family: monospace; min-width: 80px; }
-.shot-name { color: #c0c0d0; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.shot-ep { color: #808090; font-size: 12px; min-width: 100px; }
-.shot-desc { color: #a0a0b0; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shot-item:hover { border-color: var(--primary-color); }
+.shot-code { color: var(--primary-color); font-size: 13px; font-family: monospace; min-width: 80px; }
+.shot-name { color: var(--text-secondary); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shot-ep { color: var(--text-muted); font-size: 12px; min-width: 100px; }
+.shot-desc { color: var(--text-secondary); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .episode-section { margin-bottom: 20px; }
 
 :deep(.el-tabs__header) { margin-bottom: 16px; }
-:deep(.el-tabs__item) { color: #808090; }
-:deep(.el-tabs__item.is-active) { color: #e8a850; }
-:deep(.el-tabs__active-bar) { background: #e8a850; }
-:deep(.el-descriptions__label) { background: #1a1a2e; color: #808090; }
-:deep(.el-descriptions__content) { background: #16162a; color: #c0c0d0; }
+:deep(.el-tabs__item) { color: var(--text-muted); }
+:deep(.el-tabs__item.is-active) { color: var(--primary-color); }
+:deep(.el-tabs__active-bar) { background: var(--primary-gradient); }
+:deep(.el-descriptions__label) { background: var(--bg-card) !important; color: var(--text-muted); }
+:deep(.el-descriptions__content) { background: var(--bg-input) !important; color: var(--text-secondary); }
 </style>

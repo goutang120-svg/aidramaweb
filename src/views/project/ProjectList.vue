@@ -348,17 +348,18 @@ onMounted(() => {
 
 /* 项目卡片 */
 .project-card {
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   margin-bottom: 16px;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .project-card:hover {
   transform: translateY(-2px);
-  border-color: #e8a850;
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-glow);
 }
 
 .card-header {
@@ -369,7 +370,7 @@ onMounted(() => {
 }
 
 .card-title {
-  color: #c0c0d0;
+  color: var(--text-secondary);
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
@@ -380,12 +381,12 @@ onMounted(() => {
 }
 
 .more-btn {
-  color: #808090;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .more-btn:hover {
-  color: #e8a850;
+  color: var(--primary-color);
 }
 
 .card-meta {
@@ -403,13 +404,13 @@ onMounted(() => {
 
 .card-code {
   font-size: 12px;
-  color: #5a5a7e;
+  color: var(--text-muted);
   font-family: monospace;
 }
 
 .card-time {
   font-size: 12px;
-  color: #6a6a7e;
+  color: var(--text-muted);
 }
 
 /* 分页 */

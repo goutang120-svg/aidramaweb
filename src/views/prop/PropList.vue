@@ -231,9 +231,9 @@ onMounted(fetchProps)
 <style scoped>
 .prop-list { height: 100%; display: flex; flex-direction: column; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-title { color: #e8a850; font-size: 20px; font-weight: 600; }
+.page-title { color: var(--primary-color); font-size: 20px; font-weight: 600; }
 .header-actions { display: flex; gap: 12px; align-items: center; }
-.table-card { background: #16162a; border: 1px solid #2a2a3e; }
+.table-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); }
 .upload-section { display: flex; align-items: center; gap: 12px; }
 .upload-preview { flex-shrink: 0; }
 </style>

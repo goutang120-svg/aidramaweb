@@ -249,11 +249,11 @@ onMounted(() => {
 }
 
 .section-title {
-  color: #c0c0d0;
+  color: var(--text-secondary);
   font-size: 16px;
   font-weight: 600;
   padding-left: 4px;
-  border-left: 3px solid #e8a850;
+  border-left: 3px solid var(--primary-color);
   padding: 2px 0 2px 10px;
 }
 
@@ -263,31 +263,32 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: #1a1a2e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
   padding: 18px 16px;
   margin-bottom: 14px;
   position: relative;
-  border: 1px solid #2a2a3e;
+  border: 1px solid var(--border-color);
   border-top: 3px solid transparent;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s ease;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #e8a850;
+  color: var(--primary-color);
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 13px;
-  color: #808090;
+  color: var(--text-muted);
   margin-top: 4px;
 }
 
@@ -295,7 +296,7 @@ onMounted(() => {
   position: absolute;
   top: 14px;
   right: 14px;
-  opacity: 0.3;
+  opacity: 0.4;
 }
 
 /* 项目卡片 */
@@ -304,21 +305,22 @@ onMounted(() => {
 }
 
 .project-card {
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   margin-bottom: 14px;
   cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .project-card:hover {
   transform: translateY(-2px);
-  border-color: #e8a850;
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-glow);
 }
 
 .project-card-name {
-  color: #c0c0d0;
+  color: var(--text-secondary);
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -335,7 +337,7 @@ onMounted(() => {
 
 .project-card-time {
   font-size: 12px;
-  color: #6a6a7e;
+  color: var(--text-muted);
 }
 
 /* 资源卡片 */
@@ -344,23 +346,24 @@ onMounted(() => {
 }
 
 .asset-card {
-  background: #1a1a2e;
-  border: 1px solid #2a2a3e;
-  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: 14px;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
 
 .asset-card:hover {
   transform: translateY(-2px);
-  border-color: #e8a850;
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-glow);
 }
 
 .asset-thumb {
   width: 100%;
   height: 120px;
-  background: #16162a;
+  background: var(--bg-input);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,7 +382,7 @@ onMounted(() => {
 
 .asset-name {
   font-size: 13px;
-  color: #c0c0d0;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

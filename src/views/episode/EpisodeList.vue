@@ -304,32 +304,32 @@ watch(projectId, (newId) => {
 }
 .toolbar-right { display: flex; align-items: center; gap: 10px; }
 .page-title {
-  color: #c0c0d0; font-size: 16px; font-weight: 600;
-  padding-left: 10px; border-left: 3px solid #e8a850;
+  color: var(--text-secondary); font-size: 16px; font-weight: 600;
+  padding-left: 10px; border-left: 3px solid var(--primary-color);
 }
 
 .episode-grid { min-height: 120px; }
 .empty-wrap { padding: 60px 0; }
 
 .episode-card {
-  background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 8px;
+  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
   margin-bottom: 16px; cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
-.episode-card:hover { border-color: #e8a850; transform: translateY(-2px); }
+.episode-card:hover { border-color: var(--primary-color); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
 
 .ep-header { padding: 16px 16px 0; }
-.ep-no { color: #e8a850; font-size: 13px; font-weight: 500; margin-right: 8px; }
-.ep-title { color: #c0c0d0; font-size: 15px; font-weight: 600; }
-.ep-summary { padding: 8px 16px 0; color: #808090; font-size: 13px; line-height: 1.5; min-height: 40px; }
+.ep-no { color: var(--primary-color); font-size: 13px; font-weight: 500; margin-right: 8px; }
+.ep-title { color: var(--text-secondary); font-size: 15px; font-weight: 600; }
+.ep-summary { padding: 8px 16px 0; color: var(--text-muted); font-size: 13px; line-height: 1.5; min-height: 40px; }
 .ep-progress { padding: 12px 16px 0; }
 
 /* 状态标签 */
 .ep-status-tags { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
 .status-row { display: flex; align-items: center; justify-content: space-between; }
-.status-label { color: #6a6a7e; font-size: 12px; }
+.status-label { color: var(--text-muted); font-size: 12px; }
 
 .ep-actions {
-  display: flex; gap: 4px; padding: 8px 16px; border-top: 1px solid #2a2a3e;
+  display: flex; gap: 4px; padding: 8px 16px; border-top: 1px solid var(--border-color);
 }
 </style>
