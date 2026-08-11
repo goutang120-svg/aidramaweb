@@ -124,7 +124,7 @@ function handleDialogFileImport(e: Event) {
 async function fetchBibles() {
   if (!currentProjectId.value) return
   try {
-    const res = await listAll(`/projects/${currentProjectId.value}/bibles`, { page: 1, pageSize: 200 })
+    const res = await listAll('/projects/bibles', { projectId: currentProjectId.value, page: 1, pageSize: 200 })
     bibleList.value = (res.data.data.records || []) as BibleEntry[]
   } catch { /* handled */ }
 }
@@ -145,7 +145,7 @@ async function createBible() {
   if (!currentProjectId.value || !form.value.title) return
   saving.value = true
   try {
-    await createOne(`/projects/${currentProjectId.value}/bibles`, {
+    await createOne('/projects/bibles', {
       ...form.value,
       projectId: currentProjectId.value,
       version: 1,
@@ -161,13 +161,13 @@ async function saveBible() {
   if (!currentProjectId.value || !selectedBible.value) return
   saving.value = true
   try {
-    await updateOne(`/projects/${currentProjectId.value}/bibles/${selectedBible.value.id}`, {
+    await updateOne('/projects/bibles', {
       title: selectedBible.value.title,
       content: editContent.value,
       version: (selectedBible.value.version || 0) + 1,
       status: selectedBible.value.status,
       projectId: currentProjectId.value,
-    })
+    }, { projectId: currentProjectId.value, id: selectedBible.value.id })
     ElMessage.success('保存成功')
     selectedBible.value.content = editContent.value
     selectedBible.value.version += 1

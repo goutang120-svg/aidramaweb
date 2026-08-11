@@ -149,7 +149,7 @@ async function fetchSeasons() {
   if (!projectId.value) return
   loading.value = true
   try {
-    const res = await listAll(`/projects/${projectId.value}/seasons`)
+    const res = await listAll('/projects/seasons', { projectId: projectId.value })
     const data = res.data.data as any
     seasons.value = data.records || []
   } catch {
@@ -167,7 +167,7 @@ async function toggleExpand(season: any) {
   expandedId.value = season.id
   episodeLoading.value = true
   try {
-    const res = await listAll(`/seasons/${season.id}/episodes`)
+    const res = await listAll('/seasons/episodes', { seasonId: season.id })
     const data = res.data.data as any
     seasonEpisodes.value = data.records || []
   } catch {
@@ -206,10 +206,10 @@ async function handleSubmit() {
   try {
     const payload = { ...form }
     if (isEdit.value && editingId.value) {
-      await updateOne(`/projects/${projectId.value}/seasons/${editingId.value}`, payload)
+      await updateOne('/projects/seasons', payload, { projectId: projectId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/projects/${projectId.value}/seasons`, payload)
+      await createOne('/projects/seasons', payload, { projectId: projectId.value })
       ElMessage.success('添加成功')
     }
     dialogVisible.value = false
@@ -228,7 +228,7 @@ async function handleDelete(season: any) {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await deleteOne(`/projects/${projectId.value}/seasons/${season.id}`)
+    await deleteOne('/projects/seasons', { projectId: projectId.value, id: season.id })
     ElMessage.success('删除成功')
     if (expandedId.value === season.id) expandedId.value = null
     await fetchSeasons()

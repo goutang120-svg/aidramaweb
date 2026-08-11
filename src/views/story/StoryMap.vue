@@ -130,7 +130,7 @@ const flatNodes = computed(() => {
 async function fetchTree() {
   if (!currentProjectId.value) return
   try {
-    const res = await getOne(`/projects/${currentProjectId.value}/map-nodes/tree`)
+    const res = await getOne('/projects/map-nodes/tree', { projectId: currentProjectId.value })
     treeData.value = (res.data.data || []) as MapNode[]
   } catch { /* handled */ }
 }
@@ -153,10 +153,10 @@ async function handleSave() {
   try {
     const payload = { ...form.value, projectId: currentProjectId.value }
     if (editingId.value) {
-      await updateOne(`/projects/${currentProjectId.value}/map-nodes/${editingId.value}`, payload)
+      await updateOne('/projects/map-nodes', payload, { projectId: currentProjectId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/projects/${currentProjectId.value}/map-nodes`, payload)
+      await createOne('/projects/map-nodes', payload, { projectId: currentProjectId.value })
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -168,7 +168,7 @@ async function handleDelete(data: MapNode) {
   if (!currentProjectId.value) return
   try {
     await ElMessageBox.confirm('确定删除该节点吗？子节点也会被删除。', '删除确认', { type: 'warning' })
-    await deleteOne(`/projects/${currentProjectId.value}/map-nodes/${data.id}`)
+    await deleteOne('/projects/map-nodes', { projectId: currentProjectId.value, id: data.id })
     ElMessage.success('删除成功')
     await fetchTree()
   } catch { /* cancelled or handled */ }

@@ -127,7 +127,7 @@ const filteredList = computed(() => {
 async function fetchScenes() {
   if (!currentProjectId.value) return
   try {
-    const res = await listAll(`/projects/${currentProjectId.value}/scenes`, { page: 1, pageSize: 200 })
+    const res = await listAll('/projects/scenes', { projectId: currentProjectId.value, page: 1, pageSize: 200 })
     sceneList.value = (res.data.data.records || []) as Scene[]
   } catch { /* handled */ }
 }
@@ -141,11 +141,11 @@ async function handleCreate() {
   if (!currentProjectId.value || !form.value.sceneName) return
   saving.value = true
   try {
-    await createOne(`/projects/${currentProjectId.value}/scenes`, {
+    await createOne('/projects/scenes', {
       ...form.value,
       status: 'ACTIVE',
       projectId: currentProjectId.value,
-    })
+    }, { projectId: currentProjectId.value })
     ElMessage.success('创建成功')
     dialogVisible.value = false
     await fetchScenes()

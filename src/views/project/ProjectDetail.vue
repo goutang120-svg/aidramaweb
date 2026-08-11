@@ -346,7 +346,7 @@ async function fetchStats() {
     }
 
     // Fetch seasons
-    const seasonsRes = await listAll(`/projects/${id}/seasons`, { page: 1, pageSize: 100 })
+    const seasonsRes = await listAll('/projects/seasons', { projectId: id, page: 1, pageSize: 100 })
     const seasonsData = (seasonsRes as any).data?.data?.records || []
     stats.value.seasons = seasonsData.length
 
@@ -358,7 +358,7 @@ async function fetchStats() {
 
     for (const season of seasonsData) {
       try {
-        const epRes = await listAll(`/seasons/${season.id}/episodes`, { page: 1, pageSize: 100 })
+        const epRes = await listAll('/seasons/episodes', { seasonId: season.id, page: 1, pageSize: 100 })
         const epData = (epRes as any).data?.data?.records || []
         totalEpisodes += epData.length
 
@@ -374,7 +374,7 @@ async function fetchStats() {
 
           // Fetch shot count for each episode
           try {
-            const shotRes = await listAll(`/episodes/${ep.id}/shots`, { page: 1, pageSize: 1 })
+            const shotRes = await listAll('/episodes/shots', { episodeId: ep.id, page: 1, pageSize: 1 })
             const shotData = (shotRes as any).data?.data
             totalShots += shotData?.total || (shotData?.records?.length || 0)
           } catch { /* ignore */ }

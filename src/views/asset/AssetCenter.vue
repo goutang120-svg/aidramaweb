@@ -412,11 +412,11 @@ async function fetchFilters() {
 async function fetchEpisodesForFilters() {
   if (!filters.projectId) return
   try {
-    const seasonsRes = await listAll(`/projects/${filters.projectId}/seasons`)
+    const seasonsRes = await listAll('/projects/seasons', { projectId: filters.projectId })
     const sRecords = (seasonsRes.data.data as any).records || []
     const allEps: any[] = []
     for (const s of sRecords) {
-      const epRes = await listAll(`/seasons/${s.id}/episodes`)
+      const epRes = await listAll('/seasons/episodes', { seasonId: s.id })
       const epRecords = (epRes.data.data as any).records || []
       allEps.push(...epRecords.map((ep: any) => ({ ...ep, seasonId: s.id, seasonName: s.name })))
     }

@@ -556,7 +556,7 @@ async function fetchVersionHistory() {
   if (!projectId.value) return
   loadingVersions.value = true
   try {
-    const res = await request.get(`/projects/${projectId.value}/prompts`, {
+    const res = await request.get('/projects/prompts', {
       params: { shotId, page: 1, pageSize: 50 }
     })
     versionHistory.value = (res.data.data?.records || []).filter((p: any) =>
@@ -571,7 +571,7 @@ function goBack() { router.back() }
 async function fetchShot() {
   loading.shot = true
   try {
-    const res = await getOne(`/shots/${shotId}`)
+    const res = await getOne('/shots', { id: shotId })
     shot.value = res.data.data as any
 
     // Populate detail form
@@ -691,7 +691,7 @@ async function handleRemoveProp(propId: number) {
 async function saveDetail() {
   saving.detail = true
   try {
-    await updateOne(`/shots/${shotId}`, { ...detailForm })
+    await updateOne('/shots', { ...detailForm }, { id: shotId })
     ElMessage.success('保存成功')
   } catch { /* handled */ } finally { saving.detail = false }
 }

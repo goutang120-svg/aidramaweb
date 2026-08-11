@@ -129,7 +129,7 @@ const filteredList = computed(() => {
 async function fetchStyles() {
   if (!currentProjectId.value) return
   try {
-    const res = await listAll(`/projects/${currentProjectId.value}/styles`, { page: 1, pageSize: 200 })
+    const res = await listAll('/projects/styles', { projectId: currentProjectId.value, page: 1, pageSize: 200 })
     styleList.value = (res.data.data.records || []) as StyleItem[]
   } catch { /* handled */ }
 }
@@ -199,10 +199,10 @@ async function handleSave() {
       previewUrl: uploadedUrl.value || '',
     }
     if (editingId.value) {
-      await updateOne(`/projects/${currentProjectId.value}/styles/${editingId.value}`, payload)
+      await updateOne('/projects/styles', payload, { projectId: currentProjectId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/projects/${currentProjectId.value}/styles`, payload)
+      await createOne('/projects/styles', payload, { projectId: currentProjectId.value })
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -213,7 +213,7 @@ async function handleSave() {
 async function handleDelete(row: StyleItem) {
   try {
     await ElMessageBox.confirm('确定删除该风格参考吗？', '删除确认', { type: 'warning' })
-    await deleteOne(`/projects/${currentProjectId.value}/styles/${row.id}`)
+    await deleteOne('/projects/styles', { projectId: currentProjectId.value, id: row.id })
     ElMessage.success('删除成功')
     await fetchStyles()
   } catch { /* cancelled or handled */ }

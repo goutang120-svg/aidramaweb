@@ -133,7 +133,7 @@ const uploadedAssetId = ref<number | null>(null)
 async function fetchProps() {
   if (!currentProjectId.value) return
   try {
-    const res = await listAll(`/projects/${currentProjectId.value}/props`, { page: 1, pageSize: 200 })
+    const res = await listAll('/projects/props', { projectId: currentProjectId.value, page: 1, pageSize: 200 })
     propList.value = (res.data.data.records || []) as Prop[]
   } catch { /* handled */ }
 }
@@ -200,10 +200,10 @@ async function handleSave() {
   try {
     const payload = { ...form.value, projectId: currentProjectId.value }
     if (editingId.value) {
-      await updateOne(`/projects/${currentProjectId.value}/props/${editingId.value}`, payload)
+      await updateOne('/projects/props', payload, { projectId: currentProjectId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/projects/${currentProjectId.value}/props`, payload)
+      await createOne('/projects/props', payload, { projectId: currentProjectId.value })
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -214,7 +214,7 @@ async function handleSave() {
 async function handleDelete(row: Prop) {
   try {
     await ElMessageBox.confirm('确定删除该道具吗？', '删除确认', { type: 'warning' })
-    await deleteOne(`/projects/${currentProjectId.value}/props/${row.id}`)
+    await deleteOne('/projects/props', { projectId: currentProjectId.value, id: row.id })
     ElMessage.success('删除成功')
     await fetchProps()
   } catch { /* cancelled or handled */ }

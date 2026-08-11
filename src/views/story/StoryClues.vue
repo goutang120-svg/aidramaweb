@@ -95,7 +95,7 @@ const form = ref({ clueCode: '', clueName: '', description: '', status: 'UNRESOL
 async function fetchClues() {
   if (!currentProjectId.value) return
   try {
-    const res = await listAll(`/projects/${currentProjectId.value}/clues`, { page: 1, pageSize: 200 })
+    const res = await listAll('/projects/clues', { projectId: currentProjectId.value, page: 1, pageSize: 200 })
     clueList.value = (res.data.data.records || []) as Clue[]
   } catch { /* handled */ }
 }
@@ -118,10 +118,10 @@ async function handleSave() {
   try {
     const payload = { ...form.value, projectId: currentProjectId.value }
     if (editingId.value) {
-      await updateOne(`/projects/${currentProjectId.value}/clues/${editingId.value}`, payload)
+      await updateOne('/projects/clues', payload, { projectId: currentProjectId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/projects/${currentProjectId.value}/clues`, payload)
+      await createOne('/projects/clues', payload, { projectId: currentProjectId.value })
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -132,7 +132,7 @@ async function handleSave() {
 async function handleDelete(row: Clue) {
   try {
     await ElMessageBox.confirm('确定删除该线索吗？', '删除确认', { type: 'warning' })
-    await deleteOne(`/projects/${currentProjectId.value}/clues/${row.id}`)
+    await deleteOne('/projects/clues', { projectId: currentProjectId.value, id: row.id })
     ElMessage.success('删除成功')
     await fetchClues()
   } catch { /* cancelled or handled */ }

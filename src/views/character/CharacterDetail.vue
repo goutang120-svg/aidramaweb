@@ -165,7 +165,7 @@ async function fetchCharacter() {
   if (!id) return
   loading.value = true
   try {
-    const res = await listAll(`/projects/${appStore.currentProjectId}/characters`, { id: Number(id), page: 1, pageSize: 1 })
+    const res = await listAll('/projects/characters', { projectId: appStore.currentProjectId, id: Number(id), page: 1, pageSize: 1 })
     const records = res.data.data.records as Character[]
     if (records?.length) {
       character.value = records[0]
@@ -185,17 +185,17 @@ async function fetchAssets(charId: number) {
 async function fetchRelated() {
   if (!character.value?.projectId) return
   try {
-    const shotRes = await listAll(`/projects/${character.value.projectId}/characters/${character.value.id}/shots`, { page: 1, pageSize: 200 })
+    const shotRes = await listAll('/projects/characters/shots', { id: character.value.id, page: 1, pageSize: 200 })
     const shotIds: number[] = (shotRes.data.data as any)?.records || (shotRes.data.data as any) || []
     if (!shotIds.length) return
 
     // Batch fetch shot details
-    const shotPromises = shotIds.map((sid: number) => getOne(`/shots/${sid}`).then(r => (r.data.data as any)).catch(() => null))
+    const shotPromises = shotIds.map((sid: number) => getOne('/shots', { id: sid }).then(r => (r.data.data as any)).catch(() => null))
     const shots = (await Promise.all(shotPromises)).filter(Boolean)
 
     // Extract unique episode IDs and fetch episode info
     const episodeIds = [...new Set(shots.map((s: any) => s.episodeId).filter(Boolean))]
-    const episodePromises = episodeIds.map((eid: number) => getOne(`/episodes/${eid}`).then(r => {
+    const episodePromises = episodeIds.map((eid: number) => getOne('/episodes', { id: eid }).then(r => {
       const ep = r.data.data as any
       return { id: ep.id, title: ep.title, episodeNo: ep.episodeNo }
     }).catch(() => null))
@@ -215,7 +215,7 @@ async function fetchUsage() {
   if (!character.value?.id || !appStore.currentProjectId) return
   loadingUsage.value = true
   try {
-    const res = await listAll(`/projects/${appStore.currentProjectId}/characters/${character.value.id}/usage`)
+    const res = await listAll('/projects/characters/usage', { id: character.value.id })
     usageData.value = res.data.data as unknown as UsageData
   } catch { usageData.value = null } finally { loadingUsage.value = false }
 }

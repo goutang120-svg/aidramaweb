@@ -314,7 +314,7 @@ function goAssets() { router.push('/assets') }
 async function fetchEpisode() {
   loading.episode = true
   try {
-    const res = await getOne(`/episodes/${episodeId}`)
+    const res = await getOne('/episodes', { id: episodeId })
     episode.value = res.data.data as any
   } catch {
     // handled
@@ -327,7 +327,7 @@ async function fetchEpisode() {
 async function fetchScripts() {
   loading.scriptVersions = true
   try {
-    const res = await listAll(`/episodes/${episodeId}/scripts`)
+    const res = await listAll('/episodes/scripts', { episodeId })
     const data = res.data.data as any
     scriptVersions.value = data.records || []
     const current = scriptVersions.value.find((v: any) => v.isCurrent)
@@ -344,7 +344,7 @@ async function fetchScripts() {
 async function saveScript() {
   savingScript.value = true
   try {
-    await createOne(`/episodes/${episodeId}/scripts`, { content: scriptForm.content })
+    await createOne('/episodes/scripts', { content: scriptForm.content }, { episodeId })
     ElMessage.success('剧本保存成功')
     await fetchScripts()
   } catch { /* handled */ } finally { savingScript.value = false }
@@ -352,7 +352,7 @@ async function saveScript() {
 
 async function setScriptCurrent(versionId: number) {
   try {
-    await updateOne(`/episodes/${episodeId}/scripts/${versionId}/set-current`, {})
+    await updateOne('/episodes/scripts/set-current', {}, { episodeId, id: versionId })
     ElMessage.success('已设为当前版本')
     await fetchScripts()
   } catch { /* handled */ }
@@ -362,7 +362,7 @@ async function setScriptCurrent(versionId: number) {
 async function fetchStoryboards() {
   loading.storyboardVersions = true
   try {
-    const res = await listAll(`/episodes/${episodeId}/storyboards`)
+    const res = await listAll('/episodes/storyboards', { episodeId })
     const data = res.data.data as any
     storyboardVersions.value = data.records || []
     const current = storyboardVersions.value.find((v: any) => v.isCurrent)
@@ -379,7 +379,7 @@ async function fetchStoryboards() {
 async function saveStoryboard() {
   savingStoryboard.value = true
   try {
-    await createOne(`/episodes/${episodeId}/storyboards`, { content: storyboardForm.content })
+    await createOne('/episodes/storyboards', { content: storyboardForm.content }, { episodeId })
     ElMessage.success('分镜保存成功')
     await fetchStoryboards()
   } catch { /* handled */ } finally { savingStoryboard.value = false }
@@ -387,7 +387,7 @@ async function saveStoryboard() {
 
 async function setStoryboardCurrent(versionId: number) {
   try {
-    await updateOne(`/episodes/${episodeId}/storyboards/${versionId}/set-current`, {})
+    await updateOne('/episodes/storyboards/set-current', {}, { episodeId, id: versionId })
     ElMessage.success('已设为当前版本')
     await fetchStoryboards()
   } catch { /* handled */ }
@@ -397,7 +397,7 @@ async function setStoryboardCurrent(versionId: number) {
 async function fetchShots() {
   loading.shots = true
   try {
-    const res = await listAll(`/episodes/${episodeId}/shots`)
+    const res = await listAll('/episodes/shots', { episodeId })
     const data = res.data.data as any
     shots.value = data.records || []
   } catch { /* handled */ } finally { loading.shots = false }
@@ -426,10 +426,10 @@ async function handleShotSubmit() {
   try {
     const payload = { ...shotForm }
     if (shotEditId.value) {
-      await updateOne(`/episodes/${episodeId}/shots/${shotEditId.value}`, payload)
+      await updateOne('/episodes/shots', payload, { episodeId, id: shotEditId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/episodes/${episodeId}/shots`, payload)
+      await createOne('/episodes/shots', payload, { episodeId })
       ElMessage.success('添加成功')
     }
     shotDialogVisible.value = false
@@ -442,7 +442,7 @@ async function handleShotDelete(row: any) {
     await ElMessageBox.confirm(`确定删除镜头「${row.shotCode || row.shotNo}」吗？`, '确认删除', {
       confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
     })
-    await deleteOne(`/episodes/${episodeId}/shots/${row.id}`)
+    await deleteOne('/episodes/shots', { episodeId, id: row.id })
     ElMessage.success('删除成功')
     await fetchShots()
   } catch { /* cancelled */ }

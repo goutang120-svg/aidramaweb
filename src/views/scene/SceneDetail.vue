@@ -153,7 +153,7 @@ async function fetchScene() {
   if (!id) return
   loading.value = true
   try {
-    const res = await listAll(`/projects/${appStore.currentProjectId}/scenes`, { id: Number(id), page: 1, pageSize: 1 })
+    const res = await listAll('/projects/scenes', { projectId: appStore.currentProjectId, id: Number(id), page: 1, pageSize: 1 })
     const records = res.data.data.records as Scene[]
     if (records?.length) {
       scene.value = records[0]
@@ -172,15 +172,15 @@ async function fetchAssets(sceneId: number) {
 
 async function fetchRelatedShots(projectId: number, sceneId: number) {
   try {
-    const shotRes = await listAll(`/projects/${projectId}/scenes/${sceneId}/shots`, { page: 1, pageSize: 200 })
+    const shotRes = await listAll('/projects/scenes/shots', { id: sceneId, page: 1, pageSize: 200 })
     const shotIds: number[] = (shotRes.data.data as any)?.records || (shotRes.data.data as any) || []
     if (!shotIds.length) return
 
-    const shotPromises = shotIds.map((sid: number) => getOne(`/shots/${sid}`).then(r => (r.data.data as any)).catch(() => null))
+    const shotPromises = shotIds.map((sid: number) => getOne('/shots', { id: sid }).then(r => (r.data.data as any)).catch(() => null))
     const shots = (await Promise.all(shotPromises)).filter(Boolean)
 
     const episodeIds = [...new Set(shots.map((s: any) => s.episodeId).filter(Boolean))]
-    const episodePromises = episodeIds.map((eid: number) => getOne(`/episodes/${eid}`).then(r => {
+    const episodePromises = episodeIds.map((eid: number) => getOne('/episodes', { id: eid }).then(r => {
       const ep = r.data.data as any
       return { id: ep.id, title: ep.title, episodeNo: ep.episodeNo }
     }).catch(() => null))
@@ -256,7 +256,7 @@ async function fetchUsage() {
   if (!scene.value?.id || !appStore.currentProjectId) return
   loadingUsage.value = true
   try {
-    const res = await listAll(`/projects/${appStore.currentProjectId}/scenes/${scene.value.id}/usage`)
+    const res = await listAll('/projects/scenes/usage', { id: scene.value.id })
     usageData.value = res.data.data as unknown as UsageData
   } catch { usageData.value = null } finally { loadingUsage.value = false }
 }

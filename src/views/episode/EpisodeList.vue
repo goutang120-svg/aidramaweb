@@ -183,7 +183,7 @@ function progressColor(progress: number): string {
 async function fetchSeasons() {
   if (!projectId.value) return
   try {
-    const res = await listAll(`/projects/${projectId.value}/seasons`)
+    const res = await listAll('/projects/seasons', { projectId: projectId.value })
     const data = res.data.data as any
     seasons.value = data.records || []
 
@@ -208,7 +208,7 @@ async function fetchEpisodes() {
   if (!selectedSeasonId.value) return
   loading.value = true
   try {
-    const res = await listAll(`/seasons/${selectedSeasonId.value}/episodes`)
+    const res = await listAll('/seasons/episodes', { seasonId: selectedSeasonId.value })
     const data = res.data.data as any
     episodes.value = data.records || []
   } catch {
@@ -249,10 +249,10 @@ async function handleSubmit() {
   try {
     const payload = { episodeNo: form.episodeNo, title: form.title, summary: form.summary }
     if (isEdit.value && editingId.value) {
-      await updateOne(`/seasons/${selectedSeasonId.value}/episodes/${editingId.value}`, payload)
+      await updateOne('/seasons/episodes', payload, { seasonId: selectedSeasonId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/seasons/${selectedSeasonId.value}/episodes`, payload)
+      await createOne('/seasons/episodes', payload, { seasonId: selectedSeasonId.value })
       ElMessage.success('添加成功')
     }
     dialogVisible.value = false
@@ -271,7 +271,7 @@ async function handleDelete(ep: any) {
       cancelButtonText: '取消',
       type: 'warning',
     })
-    await deleteOne(`/seasons/${selectedSeasonId.value}/episodes/${ep.id}`)
+    await deleteOne('/seasons/episodes', { seasonId: selectedSeasonId.value, id: ep.id })
     ElMessage.success('删除成功')
     await fetchEpisodes()
   } catch {

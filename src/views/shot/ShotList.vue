@@ -213,12 +213,12 @@ async function fetchEpisodes() {
   if (!projectId.value) return
   try {
     // Grab all episodes across seasons
-    const seasonsRes = await listAll(`/projects/${projectId.value}/seasons`)
+    const seasonsRes = await listAll('/projects/seasons', { projectId: projectId.value })
     const seasonsData = seasonsRes.data.data as any
     const sRecords = seasonsData.records || []
     const allEpisodes: any[] = []
     for (const s of sRecords) {
-      const epRes = await listAll(`/seasons/${s.id}/episodes`)
+      const epRes = await listAll('/seasons/episodes', { seasonId: s.id })
       const epData = epRes.data.data as any
       if (epData.records) {
         allEpisodes.push(...epData.records.map((ep: any) => ({ ...ep, seasonId: s.id, seasonName: s.name })))
@@ -237,7 +237,7 @@ async function fetchShots() {
   if (!selectedEpisodeId.value) return
   loading.value = true
   try {
-    const res = await listAll(`/episodes/${selectedEpisodeId.value}/shots`)
+    const res = await listAll('/episodes/shots', { episodeId: selectedEpisodeId.value })
     const data = res.data.data as any
     shots.value = data.records || []
   } catch { /* handled */ } finally { loading.value = false }
@@ -278,10 +278,10 @@ async function handleSubmit() {
   try {
     const payload = { ...form }
     if (isEdit.value && editingId.value) {
-      await updateOne(`/episodes/${selectedEpisodeId.value}/shots/${editingId.value}`, payload)
+      await updateOne('/episodes/shots', payload, { episodeId: selectedEpisodeId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/episodes/${selectedEpisodeId.value}/shots`, payload)
+      await createOne('/episodes/shots', payload, { episodeId: selectedEpisodeId.value })
       ElMessage.success('添加成功')
     }
     dialogVisible.value = false
@@ -294,7 +294,7 @@ async function handleDelete(row: any) {
     await ElMessageBox.confirm(`确定删除镜头「${row.shotCode || row.shotNo}」吗？`, '确认删除', {
       confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
     })
-    await deleteOne(`/episodes/${selectedEpisodeId.value}/shots/${row.id}`)
+    await deleteOne('/episodes/shots', { episodeId: selectedEpisodeId.value, id: row.id })
     ElMessage.success('删除成功')
     await fetchShots()
   } catch { /* cancelled */ }

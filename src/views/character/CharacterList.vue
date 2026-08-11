@@ -113,7 +113,7 @@ const filteredList = computed(() => {
 async function fetchCharacters() {
   if (!currentProjectId.value) return
   try {
-    const res = await listAll(`/projects/${currentProjectId.value}/characters`, { page: 1, pageSize: 200 })
+    const res = await listAll('/projects/characters', { projectId: currentProjectId.value, page: 1, pageSize: 200 })
     characterList.value = (res.data.data.records || []) as Character[]
   } catch { /* handled */ }
 }
@@ -127,7 +127,7 @@ async function handleCreate() {
   if (!currentProjectId.value || !form.value.name) return
   saving.value = true
   try {
-    await createOne(`/projects/${currentProjectId.value}/characters`, { ...form.value, projectId: currentProjectId.value })
+    await createOne('/projects/characters', { ...form.value, projectId: currentProjectId.value }, { projectId: currentProjectId.value })
     ElMessage.success('创建成功')
     dialogVisible.value = false
     await fetchCharacters()

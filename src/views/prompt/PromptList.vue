@@ -178,7 +178,7 @@ async function fetchPrompts() {
   if (!projectId.value) return
   loading.value = true
   try {
-    const res = await listAll(`/projects/${projectId.value}/prompts`)
+    const res = await listAll('/projects/prompts', { projectId: projectId.value })
     const data = res.data.data as any
     prompts.value = data.records || []
   } catch { /* handled */ } finally { loading.value = false }
@@ -188,8 +188,8 @@ async function fetchRelations() {
   if (!projectId.value) return
   try {
     const [charRes, sceneRes] = await Promise.all([
-      listAll(`/projects/${projectId.value}/characters`),
-      listAll(`/projects/${projectId.value}/scenes`),
+      listAll('/projects/characters', { projectId: projectId.value }),
+      listAll('/projects/scenes', { projectId: projectId.value }),
     ])
     characters.value = (charRes.data.data as any).records || []
     scenes.value = (sceneRes.data.data as any).records || []
@@ -200,14 +200,14 @@ async function fetchRelations() {
 async function fetchShotsForDialog() {
   if (!projectId.value || shots.value.length > 0) return
   try {
-    const seasonsRes = await listAll(`/projects/${projectId.value}/seasons`)
+    const seasonsRes = await listAll('/projects/seasons', { projectId: projectId.value })
     const sRecords = (seasonsRes.data.data as any).records || []
     const allShots: any[] = []
     for (const s of sRecords) {
-      const epRes = await listAll(`/seasons/${s.id}/episodes`)
+      const epRes = await listAll('/seasons/episodes', { seasonId: s.id })
       const epRecords = (epRes.data.data as any).records || []
       for (const ep of epRecords) {
-        const shotRes = await listAll(`/episodes/${ep.id}/shots`)
+        const shotRes = await listAll('/episodes/shots', { episodeId: ep.id })
         const shotRecords = (shotRes.data.data as any).records || []
         allShots.push(...shotRecords)
       }
@@ -263,10 +263,10 @@ async function handleSubmit() {
     if (form.shotId) payload.shotId = form.shotId
 
     if (isEdit.value && editingId.value) {
-      await updateOne(`/projects/${projectId.value}/prompts/${editingId.value}`, payload)
+      await updateOne('/projects/prompts', payload, { projectId: projectId.value, id: editingId.value })
       ElMessage.success('更新成功')
     } else {
-      await createOne(`/projects/${projectId.value}/prompts`, payload)
+      await createOne('/projects/prompts', payload, { projectId: projectId.value })
       ElMessage.success('添加成功')
     }
     dialogVisible.value = false
@@ -279,7 +279,7 @@ async function handleDelete(row: any) {
     await ElMessageBox.confirm(`确定删除 Prompt「${row.name}」吗？`, '确认删除', {
       confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
     })
-    await deleteOne(`/projects/${projectId.value}/prompts/${row.id}`)
+    await deleteOne('/projects/prompts', { projectId: projectId.value, id: row.id })
     ElMessage.success('删除成功')
     await fetchPrompts()
   } catch { /* cancelled */ }

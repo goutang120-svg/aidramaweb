@@ -145,7 +145,7 @@ async function fetchProp() {
   if (!id) return
   loading.value = true
   try {
-    const res = await listAll(`/projects/${appStore.currentProjectId}/props`, { id: Number(id), page: 1, pageSize: 1 })
+    const res = await listAll('/projects/props', { projectId: appStore.currentProjectId, id: Number(id), page: 1, pageSize: 1 })
     const records = res.data.data.records as Prop[]
     if (records?.length) {
       prop.value = records[0]
@@ -164,15 +164,15 @@ async function fetchAssets(propId: number) {
 
 async function fetchRelatedShots(projectId: number, propId: number) {
   try {
-    const shotRes = await listAll(`/projects/${projectId}/props/${propId}/shots`, { page: 1, pageSize: 200 })
+    const shotRes = await listAll('/projects/props/shots', { id: propId, page: 1, pageSize: 200 })
     const shotIds: number[] = (shotRes.data.data as any)?.records || (shotRes.data.data as any) || []
     if (!shotIds.length) return
 
-    const shotPromises = shotIds.map((sid: number) => getOne(`/shots/${sid}`).then(r => (r.data.data as any)).catch(() => null))
+    const shotPromises = shotIds.map((sid: number) => getOne('/shots', { id: sid }).then(r => (r.data.data as any)).catch(() => null))
     const shots = (await Promise.all(shotPromises)).filter(Boolean)
 
     const episodeIds = [...new Set(shots.map((s: any) => s.episodeId).filter(Boolean))]
-    const episodePromises = episodeIds.map((eid: number) => getOne(`/episodes/${eid}`).then(r => {
+    const episodePromises = episodeIds.map((eid: number) => getOne('/episodes', { id: eid }).then(r => {
       const ep = r.data.data as any
       return { id: ep.id, title: ep.title, episodeNo: ep.episodeNo }
     }).catch(() => null))
@@ -244,7 +244,7 @@ async function fetchUsage() {
   if (!prop.value?.id || !appStore.currentProjectId) return
   loadingUsage.value = true
   try {
-    const res = await listAll(`/projects/${appStore.currentProjectId}/props/${prop.value.id}/usage`)
+    const res = await listAll('/projects/props/usage', { id: prop.value.id })
     usageData.value = res.data.data as unknown as UsageData
   } catch { usageData.value = null } finally { loadingUsage.value = false }
 }
