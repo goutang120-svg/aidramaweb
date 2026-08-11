@@ -121,12 +121,12 @@
             <span class="episode-label">第{{ ep.episodeNo }}集</span>
             <span class="episode-title">{{ ep.title || '未命名' }}</span>
             <el-tag
-              :color="statusColor(ep.status || ep.scriptStatus)"
+              :color="statusColor(ep.status || ep.scriptStatus || '')"
               effect="dark"
               size="small"
               style="border-color: transparent;"
             >
-              {{ statusLabel(ep.status || ep.scriptStatus) }}
+              {{ statusLabel(ep.status || ep.scriptStatus || '') }}
             </el-tag>
           </div>
           <el-progress
@@ -236,6 +236,7 @@ const stats = ref({
   episodes: 0,
   shots: 0,
   assets: 0,
+  props: 0,
 })
 
 const episodes = ref<EpisodeRow[]>([])

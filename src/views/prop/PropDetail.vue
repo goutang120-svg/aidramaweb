@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, Picture, Plus } from '@element-plus/icons-vue'
 import { ElMessage, type UploadRequestOptions } from 'element-plus'
