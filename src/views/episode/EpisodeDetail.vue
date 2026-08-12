@@ -33,6 +33,8 @@
             <div class="tab-toolbar">
               <span class="tab-label">剧本内容 (Markdown)</span>
               <div class="tab-actions">
+                <input ref="scriptFileInput" type="file" accept=".md,.txt" style="display:none" @change="handleScriptFile" />
+                <el-button size="small" @click="($refs.scriptFileInput as HTMLInputElement).click()">导入MD</el-button>
                 <el-button v-if="activeScriptVersion" size="small" @click="setScriptCurrent(activeScriptVersion)">
                   设为当前版本
                 </el-button>
@@ -72,6 +74,8 @@
             <div class="tab-toolbar">
               <span class="tab-label">分镜内容</span>
               <div class="tab-actions">
+                <input ref="storyboardFileInput" type="file" accept=".md,.txt" style="display:none" @change="handleStoryboardFile" />
+                <el-button size="small" @click="($refs.storyboardFileInput as HTMLInputElement).click()">导入MD</el-button>
                 <el-button v-if="activeStoryboardVersion" size="small" @click="setStoryboardCurrent(activeStoryboardVersion)">
                   设为当前版本
                 </el-button>
@@ -110,9 +114,13 @@
           <div class="tab-content">
             <div class="tab-toolbar">
               <span class="tab-label">镜头列表</span>
-              <el-button type="primary" size="small" @click="openShotDialog()">
-                <el-icon><Plus /></el-icon> 添加镜头
-              </el-button>
+              <div style="display:flex;gap:8px">
+                <input ref="shotsFileInput" type="file" accept=".md,.txt" style="display:none" @change="handleShotsFile" />
+                <el-button size="small" @click="($refs.shotsFileInput as HTMLInputElement).click()">导入分镜MD</el-button>
+                <el-button type="primary" size="small" @click="openShotDialog()">
+                  <el-icon><Plus /></el-icon> 添加镜头
+                </el-button>
+              </div>
             </div>
             <el-table
               :data="shots"
@@ -158,6 +166,10 @@
                 <div class="asset-thumb">
                   <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" />
                   <el-icon v-else :size="32" color="#4a4a6e"><PictureFilled /></el-icon>
+                  <el-button class="asset-delete-btn" size="small" type="danger" circle
+                    @click.stop="handleEpisodeAssetDelete(asset)">
+                    <el-icon :size="12"><Delete /></el-icon>
+                  </el-button>
                 </div>
                 <div class="asset-name" :title="asset.assetName">{{ asset.assetName }}</div>
                 <el-tag size="small" :type="assetTagType(asset.assetType)">{{ assetTypeLabel(asset.assetType) }}</el-tag>
@@ -205,6 +217,57 @@
         <el-button type="primary" :loading="shotSubmitting" @click="handleShotSubmit">确定</el-button>
       </template>
     </el-dialog>
+    <!-- 分镜MD导入预览对话框 -->
+    <el-dialog
+      v-model="shotsImportVisible"
+      title="导入分镜镜头"
+      width="900px"
+      class="dark-dialog"
+      :close-on-click-modal="false"
+    >
+      <div v-if="parsedShots.length === 0 && !parsingShots" style="text-align:center;padding:40px;color:#808090">
+        请选择包含分镜内容的 .md 文件
+      </div>
+      <el-table v-else :data="parsedShots" class="dark-table" max-height="450" size="small">
+        <el-table-column prop="shotNo" label="镜号" width="60" />
+        <el-table-column prop="shotType" label="类型" width="90">
+          <template #default="{ row }">
+            <el-input v-model="row.shotType" size="small" />
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="描述" min-width="160">
+          <template #default="{ row }">
+            <el-input v-model="row.description" size="small" />
+          </template>
+        </el-table-column>
+        <el-table-column prop="action" label="动作" min-width="120">
+          <template #default="{ row }">
+            <el-input v-model="row.action" size="small" />
+          </template>
+        </el-table-column>
+        <el-table-column prop="dialogue" label="对白" min-width="120">
+          <template #default="{ row }">
+            <el-input v-model="row.dialogue" size="small" />
+          </template>
+        </el-table-column>
+        <el-table-column prop="cameraAngle" label="角度" width="80">
+          <template #default="{ row }">
+            <el-input v-model="row.cameraAngle" size="small" />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="60" fixed="right">
+          <template #default="{ $index }">
+            <el-button text size="small" type="danger" @click="parsedShots.splice($index, 1)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="shotsImportVisible = false">取消</el-button>
+        <el-button type="primary" :loading="importingShots" :disabled="parsedShots.length === 0" @click="handleShotsImport">
+          导入 {{ parsedShots.length }} 个镜头
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -212,7 +275,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Plus, PictureFilled } from '@element-plus/icons-vue'
+import { ArrowLeft, Plus, PictureFilled, Delete } from '@element-plus/icons-vue'
 import {
   getOne, listAll, createOne, updateOne, deleteOne,
   getAssets, getUploadUrl, createAsset,
@@ -263,6 +326,12 @@ const shotRules = {
   shotNo: [{ required: true, message: '请输入镜头编号', trigger: 'blur' }],
   shotType: [{ required: true, message: '请选择类型', trigger: 'change' }],
 }
+
+// --- MD Import ---
+const shotsImportVisible = ref(false)
+const parsedShots = ref<Record<string, any>[]>([])
+const parsingShots = ref(false)
+const importingShots = ref(false)
 
 // --- Assets ---
 const episodeAssets = ref<AssetVO[]>([])
@@ -458,6 +527,68 @@ async function fetchEpisodeAssets() {
   } catch { /* handled */ } finally { loading.assets = false }
 }
 
+// --- Episode Asset Delete ---
+async function handleEpisodeAssetDelete(asset: AssetVO) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${asset.assetName}」吗？删除后不可恢复。`, '确认删除', {
+      confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteOne('/assets', { id: asset.id })
+    ElMessage.success('已删除')
+    await fetchEpisodeAssets()
+  } catch { /* cancelled */ }
+}
+
+// --- MD Import handlers ---
+function handleScriptFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { scriptForm.content = reader.result as string }
+  reader.readAsText(file)
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+function handleStoryboardFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => { storyboardForm.content = reader.result as string }
+  reader.readAsText(file)
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+async function handleShotsFile(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  ;(e.target as HTMLInputElement).value = ''
+  parsingShots.value = true
+  shotsImportVisible.value = true
+  try {
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const res = await createOne('/episodes/shots/parse', { content: reader.result as string })
+        parsedShots.value = (res.data.data as any[]) || []
+      } catch { ElMessage.error('解析失败') }
+      parsingShots.value = false
+    }
+    reader.readAsText(file)
+  } catch { parsingShots.value = false }
+}
+
+async function handleShotsImport() {
+  if (parsedShots.value.length === 0) return
+  importingShots.value = true
+  try {
+    await createOne('/episodes/shots/batch', { shots: parsedShots.value }, { episodeId })
+    ElMessage.success(`成功导入 ${parsedShots.value.length} 个镜头`)
+    shotsImportVisible.value = false
+    parsedShots.value = []
+    await fetchShots()
+  } catch { /* handled */ } finally { importingShots.value = false }
+}
+
 onMounted(() => {
   fetchEpisode()
   fetchScripts()
@@ -526,9 +657,14 @@ onMounted(() => {
   overflow: hidden; transition: border-color 0.2s;
 }
 .asset-item:hover { border-color: #e8a850; }
+.asset-delete-btn {
+  position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
+}
+.asset-thumb:hover .asset-delete-btn { opacity: 1; }
 .asset-thumb {
   width: 100%; height: 120px; background: #16162a;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
+  position: relative;
 }
 .asset-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .asset-name {

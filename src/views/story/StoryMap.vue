@@ -11,29 +11,48 @@
     <el-empty v-if="!currentProjectId" description="请先选择项目" />
 
     <div v-else class="map-container">
-      <el-card class="tree-card">
-        <el-tree
-          :data="treeData"
-          :props="{ children: 'children', label: 'title' }"
-          node-key="id"
-          default-expand-all
-          :expand-on-click-node="true"
-        >
-          <template #default="{ node, data }">
-            <span class="tree-node">
-              <span class="node-title">{{ data.title }}</span>
-              <el-tag size="small" :type="nodeTypeTag(data.nodeType)" class="node-badge">
-                {{ nodeTypeLabel(data.nodeType) }}
-              </el-tag>
-              <span class="node-actions">
-                <el-button link size="small" type="primary" @click.stop="openAdd(data)">+</el-button>
-                <el-button link size="small" @click.stop="openEdit(data)">编辑</el-button>
-                <el-button link size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
+      <div class="map-layout">
+        <el-card class="tree-card">
+          <el-tree
+            :data="treeData"
+            :props="{ children: 'children', label: 'title' }"
+            node-key="id"
+            default-expand-all
+            :expand-on-click-node="true"
+            highlight-current
+            @node-click="selectNode"
+          >
+            <template #default="{ node, data }">
+              <span class="tree-node" :class="{ selected: selectedNode?.id === data.id }">
+                <span class="node-title">{{ data.title }}</span>
+                <el-tag size="small" :type="nodeTypeTag(data.nodeType)" class="node-badge">
+                  {{ nodeTypeLabel(data.nodeType) }}
+                </el-tag>
+                <span class="node-actions">
+                  <el-button link size="small" type="primary" @click.stop="openAdd(data)">+</el-button>
+                  <el-button link size="small" @click.stop="openEdit(data)">编辑</el-button>
+                  <el-button link size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
+                </span>
               </span>
-            </span>
+            </template>
+          </el-tree>
+        </el-card>
+        <el-card v-if="selectedNode" class="detail-card">
+          <template #header>
+            <div class="detail-header">
+              <span class="detail-title">{{ selectedNode.title }}</span>
+              <el-tag size="small" :type="nodeTypeTag(selectedNode.nodeType)">
+                {{ nodeTypeLabel(selectedNode.nodeType) }}
+              </el-tag>
+            </div>
           </template>
-        </el-tree>
-      </el-card>
+          <div v-if="selectedNode.description" class="detail-body markdown-body" v-html="renderedMarkdown"></div>
+          <el-empty v-else description="暂无描述内容" :image-size="60" />
+        </el-card>
+        <el-card v-else class="detail-card detail-placeholder">
+          <el-empty description="点击左侧节点查看详情" :image-size="80" />
+        </el-card>
+      </div>
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑节点' : '新建节点'" width="480px">
@@ -97,6 +116,31 @@ const dialogVisible = ref(false)
 const editingId = ref<number | null>(null)
 const form = ref({ title: '', nodeType: 'NODE', parentId: null as number | null, sortOrder: 0, description: '' })
 const fileInput = ref<HTMLInputElement | null>(null)
+const selectedNode = ref<MapNode | null>(null)
+
+function selectNode(data: MapNode) { selectedNode.value = data }
+
+function renderMarkdown(md: string): string {
+  if (!md) return ''
+  return md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/<\/li>\s*<li>/g, '</li><li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+}
+
+const renderedMarkdown = computed(() => {
+  if (!selectedNode.value?.description) return ''
+  return '<p>' + renderMarkdown(selectedNode.value.description) + '</p>'
+})
 
 function triggerImport() { fileInput.value?.click() }
 function handleFileImport(e: Event) {
@@ -193,14 +237,35 @@ onMounted(fetchTree)
 .header-actions { display: flex; gap: 12px; align-items: center; }
 
 .map-container { flex: 1; }
-.tree-card { background: #16162a; border: 1px solid #2a2a3e; }
+.map-layout { display: flex; gap: 16px; height: calc(100vh - 180px); }
+.tree-card {
+  background: #16162a; border: 1px solid #2a2a3e; width: 380px; flex-shrink: 0;
+  overflow-y: auto;
+}
 .tree-card :deep(.el-card__body) { padding: 20px; }
+.detail-card {
+  background: #16162a; border: 1px solid #2a2a3e; flex: 1; overflow-y: auto;
+}
+.detail-placeholder { display: flex; align-items: center; justify-content: center; }
+.detail-header { display: flex; align-items: center; gap: 8px; }
+.detail-title { color: #c0c0d0; font-size: 16px; font-weight: 600; }
+.detail-body { color: #c0c0d0; font-size: 14px; line-height: 1.8; padding: 4px 0; }
 
 .tree-node { display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 0; }
-.node-title { color: #c0c0d0; font-size: 14px; flex: 1; }
+.tree-node.selected .node-title { color: #e8a850; font-weight: 600; }
+.node-title { color: #c0c0d0; font-size: 14px; flex: 1; cursor: pointer; }
 .node-badge { font-size: 11px; }
 .node-actions { display: none; gap: 4px; margin-left: auto; }
 .tree-node:hover .node-actions { display: flex; }
+
+.markdown-body :deep(h2) { color: #e8a850; font-size: 18px; border-bottom: 1px solid #2a2a3e; padding-bottom: 6px; margin: 16px 0 8px; }
+.markdown-body :deep(h3) { color: #d0d0e0; font-size: 16px; margin: 12px 0 6px; }
+.markdown-body :deep(h4) { color: #c0c0d0; font-size: 14px; margin: 10px 0 4px; }
+.markdown-body :deep(strong) { color: #e8a850; }
+.markdown-body :deep(code) { background: #2a2a3e; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.markdown-body :deep(ul) { padding-left: 20px; margin: 6px 0; }
+.markdown-body :deep(li) { margin: 2px 0; }
+.markdown-body :deep(p) { margin: 8px 0; }
 
 :deep(.el-tree) { background: transparent; }
 :deep(.el-tree-node__content) { height: 36px; padding-right: 8px; }

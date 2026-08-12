@@ -83,6 +83,10 @@
               <div class="card-thumb">
                 <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" loading="lazy" />
                 <el-icon v-else :size="36" color="#4a4a6e"><PictureFilled /></el-icon>
+                <el-button class="card-delete-btn" size="small" type="danger" circle
+                  @click.stop="handleAssetDelete(asset)">
+                  <el-icon :size="12"><Delete /></el-icon>
+                </el-button>
               </div>
               <div class="card-info">
                 <div class="card-name" :title="asset.assetName">{{ asset.assetName }}</div>
@@ -114,6 +118,10 @@
                 <div class="play-overlay">
                   <el-icon :size="32" color="#fff"><VideoPlay /></el-icon>
                 </div>
+                <el-button class="card-delete-btn" size="small" type="danger" circle
+                  @click.stop="handleAssetDelete(asset)">
+                  <el-icon :size="12"><Delete /></el-icon>
+                </el-button>
               </div>
               <div class="vid-info">
                 <div class="vid-name" :title="asset.assetName">{{ asset.assetName }}</div>
@@ -140,6 +148,7 @@
           <audio v-if="asset.previewUrl" :src="asset.previewUrl" controls class="audio-player" preload="none" />
           <div class="audio-actions">
             <el-button text size="small" type="primary" @click="downloadAsset(asset)">下载</el-button>
+            <el-button text size="small" type="danger" @click="handleAssetDelete(asset)">删除</el-button>
           </div>
         </div>
       </div>
@@ -162,6 +171,7 @@
             <el-button text size="small" type="primary" @click="downloadAsset(asset)">
               <el-icon><Download /></el-icon> 下载
             </el-button>
+            <el-button text size="small" type="danger" @click="handleAssetDelete(asset)">删除</el-button>
           </div>
         </div>
       </div>
@@ -275,13 +285,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, PictureFilled, VideoCamera, VideoPlay, Headset,
-  ZoomIn, ZoomOut, FullScreen, UploadFilled, Download, Document,
+  ZoomIn, ZoomOut, FullScreen, UploadFilled, Download, Document, Delete,
 } from '@element-plus/icons-vue'
 import {
-  getAssets, getUploadUrl, createAsset, getAssetVersions, setCurrentVersion,
+  getAssets, getUploadUrl, createAsset, getAssetVersions, setCurrentVersion, deleteOne,
   getTags, listAll, getProject,
 } from '@/api/index'
 import { useAppStore } from '@/stores/app'
@@ -367,6 +377,18 @@ function handleAssetClick(asset: AssetVO) {
   } else {
     downloadAsset(asset)
   }
+}
+
+// --- Delete ---
+async function handleAssetDelete(asset: AssetVO) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${asset.assetName}」吗？删除后不可恢复。`, '确认删除', {
+      confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteOne('/assets', { id: asset.id })
+    ElMessage.success('已删除')
+    await fetchAssets()
+  } catch { /* cancelled */ }
 }
 
 // --- Fetch ---
@@ -599,6 +621,7 @@ onMounted(() => {
 .card-thumb {
   width: 100%; height: 140px; background: #16162a;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
+  position: relative;
 }
 .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .card-info { padding: 10px 12px; }
@@ -702,4 +725,11 @@ onMounted(() => {
 
 .batch-progress { margin-top: 16px; }
 .progress-detail { color: #808090; font-size: 12px; margin-top: 6px; }
+
+/* 删除按钮 */
+.card-delete-btn {
+  position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
+}
+.card-thumb:hover .card-delete-btn,
+.vid-thumb:hover .card-delete-btn { opacity: 1; }
 </style>

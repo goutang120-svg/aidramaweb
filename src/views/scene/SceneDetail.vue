@@ -47,15 +47,21 @@
           </div>
           <div v-if="assetList.length" class="asset-grid">
             <div v-for="asset in assetList" :key="asset.id" class="asset-item">
-              <el-image
-                v-if="asset.previewUrl"
-                :src="asset.previewUrl"
-                fit="cover"
-                class="asset-image"
-                :preview-src-list="[asset.previewUrl]"
-              />
-              <div v-else class="asset-placeholder">
-                <el-icon :size="32"><Picture /></el-icon>
+              <div class="asset-thumb">
+                <el-image
+                  v-if="asset.previewUrl"
+                  :src="asset.previewUrl"
+                  fit="cover"
+                  class="asset-image"
+                  :preview-src-list="[asset.previewUrl]"
+                />
+                <div v-else class="asset-placeholder">
+                  <el-icon :size="32"><Picture /></el-icon>
+                </div>
+                <el-button class="asset-delete-btn" size="small" type="danger" circle
+                  @click.stop="handleAssetDelete(asset)">
+                  <el-icon :size="12"><Delete /></el-icon>
+                </el-button>
               </div>
               <div class="asset-name">{{ asset.assetName || asset.fileName }}</div>
             </div>
@@ -90,9 +96,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Picture, Plus } from '@element-plus/icons-vue'
-import { ElMessage, type UploadRequestOptions } from 'element-plus'
-import { listAll, getAssets, getUploadUrl, createAsset, getOne } from '@/api/index'
+import { ArrowLeft, Picture, Plus, Delete } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus'
+import { listAll, getAssets, getUploadUrl, createAsset, getOne, deleteOne } from '@/api/index'
 import { useAppStore } from '@/stores/app'
 
 interface Scene {
@@ -235,6 +241,17 @@ async function customUpload(options: UploadRequestOptions) {
   } catch { ElMessage.error('上传失败') } finally { uploading.value = false }
 }
 
+async function handleAssetDelete(asset: Asset) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${asset.assetName || asset.fileName}」吗？删除后不可恢复。`, '确认删除', {
+      confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteOne('/assets', { id: asset.id })
+    ElMessage.success('已删除')
+    if (scene.value) await fetchAssets(scene.value.id)
+  } catch { /* cancelled */ }
+}
+
 function timeLabel(t?: string) {
   const map: Record<string, string> = { MORNING: '早晨', DAY: '白天', DUSK: '黄昏', NIGHT: '夜晚', MIDNIGHT: '深夜' }
   return map[t || ''] || t || '-'
@@ -282,8 +299,13 @@ watch(activeTab, (tab) => {
 .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .asset-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; transition: all 0.3s ease; }
 .asset-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
+.asset-thumb { position: relative; }
 .asset-image { width: 100%; height: 160px; display: block; }
 .asset-placeholder { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); color: var(--text-muted); }
+.asset-delete-btn {
+  position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
+}
+.asset-thumb:hover .asset-delete-btn { opacity: 1; }
 .asset-name { padding: 8px; font-size: 12px; color: var(--text-secondary); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .usage-section { margin-bottom: 20px; }

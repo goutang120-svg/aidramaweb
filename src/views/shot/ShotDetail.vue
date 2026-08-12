@@ -194,6 +194,10 @@
                   <div class="img-wrap">
                     <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" loading="lazy" />
                     <el-icon v-else :size="32" color="#4a4a6e"><PictureFilled /></el-icon>
+                    <el-button class="asset-delete-btn" size="small" type="danger" circle
+                      @click.stop="handleAssetDelete(asset)">
+                      <el-icon :size="12"><Delete /></el-icon>
+                    </el-button>
                   </div>
                   <div class="img-name" :title="asset.assetName">{{ asset.assetName }}</div>
                 </div>
@@ -217,6 +221,10 @@
                     <div class="play-overlay">
                       <el-icon :size="28" color="#fff"><VideoPlay /></el-icon>
                     </div>
+                    <el-button class="asset-delete-btn" size="small" type="danger" circle
+                      @click.stop="handleAssetDelete(asset)">
+                      <el-icon :size="12"><Delete /></el-icon>
+                    </el-button>
                   </div>
                   <div class="vid-name" :title="asset.assetName">{{ asset.assetName }}</div>
                 </div>
@@ -233,6 +241,10 @@
                   <span class="audio-name" :title="asset.assetName">{{ asset.assetName }}</span>
                   <audio v-if="asset.previewUrl" :src="asset.previewUrl" controls class="audio-player" preload="none" />
                   <span v-else class="no-preview">无预览</span>
+                  <el-button class="asset-delete-btn" size="small" type="danger" plain circle
+                    @click="handleAssetDelete(asset)">
+                    <el-icon :size="12"><Delete /></el-icon>
+                  </el-button>
                 </div>
               </div>
             </div>
@@ -408,14 +420,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft, UploadFilled, PictureFilled, VideoCamera, VideoPlay,
   Headset, User, Goods, ZoomIn, ZoomOut, FullScreen,
   Plus, Delete, Search,
 } from '@element-plus/icons-vue'
 import {
-  getOne, listAll, updateOne,
+  getOne, listAll, updateOne, deleteOne,
   getAssets, getUploadUrl, createAsset, getAssetVersions, setCurrentVersion,
   listCharacters, listScenes, listProps,
   listShotCharacters, addShotCharacter, removeShotCharacter,
@@ -709,6 +721,17 @@ async function fetchShotAssets() {
   } catch { /* handled */ } finally { loading.assets = false }
 }
 
+async function handleAssetDelete(asset: AssetVO) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${asset.assetName}」吗？删除后不可恢复。`, '确认删除', {
+      confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteOne('/assets', { id: asset.id })
+    ElMessage.success('已删除')
+    await fetchShotAssets()
+  } catch { /* cancelled */ }
+}
+
 async function uploadFile(file: File, assetType: string, extraMeta: Record<string, any> = {}) {
   uploading.value = true
   uploadProgress.value = 10
@@ -901,6 +924,7 @@ watch(activeTab, (tab) => {
 .img-wrap {
   width: 100%; height: 140px; background: var(--bg-input);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
+  position: relative;
 }
 .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
 .img-name {
@@ -982,6 +1006,17 @@ watch(activeTab, (tab) => {
 .picker-name { color: var(--text-secondary); font-size: 14px; flex: 1; }
 
 .no-data { color: var(--text-muted); font-size: 13px; padding: 20px 0; text-align: center; }
+
+/* 资产删除按钮 */
+.asset-delete-btn {
+  position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
+}
+.image-item:hover .asset-delete-btn,
+.video-item:hover .asset-delete-btn,
+.img-wrap:hover .asset-delete-btn,
+.vid-thumb:hover .asset-delete-btn { opacity: 1; }
+.audio-item { position: relative; }
+.audio-item .asset-delete-btn { position: relative; top: auto; right: auto; opacity: 1; }
 
 /* 预览对话框 */
 .preview-image-wrap { text-align: center; max-height: 70vh; overflow: hidden; display: flex; flex-direction: column; }

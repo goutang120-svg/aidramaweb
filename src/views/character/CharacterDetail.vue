@@ -13,7 +13,73 @@
       <el-tabs v-model="activeTab">
         <el-tab-pane label="基础资料" name="basic">
           <el-card class="info-card">
-            <el-descriptions :column="2" border>
+            <div class="basic-toolbar">
+              <span></span>
+              <div style="display:flex;gap:8px">
+                <el-button v-if="editing" @click="cancelEdit">取消</el-button>
+                <el-button type="primary" :loading="saving" @click="editing ? saveEdit() : (editing = true)">
+                  {{ editing ? '保存' : '编辑' }}
+                </el-button>
+              </div>
+            </div>
+            <el-form v-if="editing" :model="form" label-width="80px" label-position="top">
+              <el-row :gutter="16">
+                <el-col :span="12">
+                  <el-form-item label="姓名" required>
+                    <el-input v-model="form.name" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="别名">
+                    <el-input v-model="form.alias" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="性别">
+                    <el-select v-model="form.gender" style="width:100%">
+                      <el-option label="男" value="MALE" />
+                      <el-option label="女" value="FEMALE" />
+                      <el-option label="其他" value="OTHER" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="年龄">
+                    <el-input v-model="form.age" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="身份">
+                    <el-input v-model="form.identity" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="地位">
+                    <el-select v-model="form.status" style="width:100%">
+                      <el-option label="主角" value="MAIN" />
+                      <el-option label="配角" value="SECONDARY" />
+                      <el-option label="客串" value="GUEST" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-form-item label="性格">
+                <el-input v-model="form.personality" type="textarea" :rows="2" />
+              </el-form-item>
+              <el-form-item label="背景">
+                <el-input v-model="form.background" type="textarea" :rows="3" />
+              </el-form-item>
+              <el-form-item label="角色弧光">
+                <el-input v-model="form.characterArc" type="textarea" :rows="3" />
+              </el-form-item>
+              <el-form-item label="外貌描述">
+                <el-input v-model="form.appearance" type="textarea" :rows="2" />
+              </el-form-item>
+              <el-form-item label="服装描述">
+                <el-input v-model="form.clothing" type="textarea" :rows="2" />
+              </el-form-item>
+            </el-form>
+            <el-descriptions v-else :column="2" border>
               <el-descriptions-item label="姓名">{{ character?.name }}</el-descriptions-item>
               <el-descriptions-item label="别名">{{ character?.alias || '-' }}</el-descriptions-item>
               <el-descriptions-item label="性别">{{ genderLabel(character?.gender) }}</el-descriptions-item>
@@ -47,15 +113,21 @@
           </div>
           <div v-if="assetList.length" class="asset-grid">
             <div v-for="asset in assetList" :key="asset.id" class="asset-item">
-              <el-image
-                v-if="asset.previewUrl"
-                :src="asset.previewUrl"
-                fit="cover"
-                class="asset-image"
-                :preview-src-list="[asset.previewUrl]"
-              />
-              <div v-else class="asset-placeholder">
-                <el-icon :size="32"><Picture /></el-icon>
+              <div class="asset-thumb">
+                <el-image
+                  v-if="asset.previewUrl"
+                  :src="asset.previewUrl"
+                  fit="cover"
+                  class="asset-image"
+                  :preview-src-list="[asset.previewUrl]"
+                />
+                <div v-else class="asset-placeholder">
+                  <el-icon :size="32"><Picture /></el-icon>
+                </div>
+                <el-button class="asset-delete-btn" size="small" type="danger" circle
+                  @click.stop="handleAssetDelete(asset)">
+                  <el-icon :size="12"><Delete /></el-icon>
+                </el-button>
               </div>
               <div class="asset-name">{{ asset.assetName || asset.fileName }}</div>
             </div>
@@ -97,9 +169,9 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Picture, Plus } from '@element-plus/icons-vue'
-import { ElMessage, type UploadRequestOptions } from 'element-plus'
-import { listAll, getAssets, getUploadUrl, createAsset, getOne } from '@/api/index'
+import { ArrowLeft, Picture, Plus, Delete } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus'
+import { listAll, getAssets, getUploadUrl, createAsset, getOne, deleteOne, updateOne } from '@/api/index'
 import { useAppStore } from '@/stores/app'
 
 interface Character {
@@ -157,6 +229,12 @@ const relatedShots = ref<Shot[]>([])
 const activeTab = ref('basic')
 const loading = ref(false)
 const uploading = ref(false)
+const saving = ref(false)
+const editing = ref(false)
+const form = ref({
+  name: '', alias: '', gender: '', age: '', identity: '',
+  status: '', personality: '', background: '', characterArc: '', appearance: '', clothing: '',
+})
 const loadingUsage = ref(false)
 const usageData = ref<UsageData | null>(null)
 
@@ -173,6 +251,38 @@ async function fetchCharacter() {
       fetchRelated()
     }
   } catch { /* handled */ } finally { loading.value = false }
+}
+
+function populateForm() {
+  const c = character.value
+  if (!c) return
+  form.value = {
+    name: c.name || '', alias: c.alias || '', gender: c.gender || '',
+    age: c.age ? String(c.age) : '', identity: c.identity || '',
+    status: c.status || '', personality: c.personality || '',
+    background: c.background || '', characterArc: c.characterArc || '',
+    appearance: c.appearance || '', clothing: c.clothing || '',
+  }
+}
+
+async function saveEdit() {
+  if (!character.value || !form.value.name) return
+  saving.value = true
+  try {
+    const payload = { ...form.value }
+    await updateOne('/projects/characters', payload, { projectId: appStore.currentProjectId, id: character.value.id })
+    ElMessage.success('保存成功')
+    editing.value = false
+    // Refresh character to show updated data
+    const res = await listAll('/projects/characters', { projectId: appStore.currentProjectId, id: character.value.id, page: 1, pageSize: 1 })
+    const records = res.data.data.records as Character[]
+    if (records?.length) character.value = records[0]
+  } catch { /* handled */ } finally { saving.value = false }
+}
+
+function cancelEdit() {
+  editing.value = false
+  populateForm()
 }
 
 async function fetchAssets(charId: number) {
@@ -260,6 +370,17 @@ async function customUpload(options: UploadRequestOptions) {
   } catch { ElMessage.error('上传失败') } finally { uploading.value = false }
 }
 
+async function handleAssetDelete(asset: Asset) {
+  try {
+    await ElMessageBox.confirm(`确定删除「${asset.assetName || asset.fileName}」吗？删除后不可恢复。`, '确认删除', {
+      confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
+    })
+    await deleteOne('/assets', { id: asset.id })
+    ElMessage.success('已删除')
+    if (character.value) await fetchAssets(character.value.id)
+  } catch { /* cancelled */ }
+}
+
 function genderLabel(g?: string) {
   const map: Record<string, string> = { MALE: '男', FEMALE: '女', OTHER: '其他' }
   return map[g || ''] || g || '-'
@@ -289,13 +410,19 @@ watch(activeTab, (tab) => {
 
 .detail-content { flex: 1; overflow-y: auto; }
 .info-card { background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 16px; }
+.basic-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
 .asset-toolbar { margin-bottom: 12px; }
 .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .asset-item { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; transition: all 0.3s ease; }
 .asset-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
+.asset-thumb { position: relative; }
 .asset-image { width: 100%; height: 160px; display: block; }
 .asset-placeholder { width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; background: var(--bg-dark); color: var(--text-muted); }
+.asset-delete-btn {
+  position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
+}
+.asset-thumb:hover .asset-delete-btn { opacity: 1; }
 .asset-name { padding: 8px; font-size: 12px; color: var(--text-secondary); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .prompt-content { color: var(--text-secondary); font-size: 14px; line-height: 1.8; white-space: pre-wrap; padding: 16px; background: var(--bg-darkest); border-radius: var(--radius-md); }
