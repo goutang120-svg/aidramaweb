@@ -14,8 +14,8 @@
         :default-active="activeMenu"
         :collapse="sidebarCollapsed"
         background-color="transparent"
-        text-color="#a0a0c0"
-        active-text-color="#fff"
+        text-color="#8A867F"
+        active-text-color="#FFFFFF"
         router
       >
         <el-menu-item index="/dashboard">
@@ -123,25 +123,26 @@ function handleLogout() {
 <style scoped>
 .layout-container {
   height: 100vh;
-  background: var(--bg-darkest);
+  background: var(--bg-cream);
 }
 
 .layout-aside {
-  background: var(--bg-card);
-  border-right: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-hairline);
   overflow-y: auto;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 0 8px rgba(31, 36, 33, 0.04);
 }
 
 .logo {
-  height: 72px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 0 16px;
+  padding: 0 20px;
   cursor: pointer;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-hairline);
   position: relative;
   overflow: hidden;
 }
@@ -152,56 +153,57 @@ function handleLogout() {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--primary-gradient);
+  height: 3px;
+  background: var(--primary-color);
 }
 
 .logo-icon-wrap {
-  width: 40px;
-  height: 40px;
-  background: var(--primary-gradient);
+  width: 44px;
+  height: 44px;
+  background: var(--primary-color);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(196, 97, 47, 0.25);
 }
 
 .logo-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 .logo-title {
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  color: var(--text-ink);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .logo-subtitle {
-  color: var(--primary-light);
+  color: var(--text-secondary);
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .layout-header {
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-hairline);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  height: 64px;
+  padding: 0 32px;
+  height: 72px;
   backdrop-filter: blur(10px);
+  box-shadow: 0 1px 3px rgba(31, 36, 33, 0.04);
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .collapse-btn {
@@ -212,8 +214,8 @@ function handleLogout() {
 }
 
 .collapse-btn:hover {
-  color: var(--primary-light);
-  background: var(--bg-card-hover);
+  color: var(--primary-color);
+  background: var(--primary-tint);
 }
 
 .header-right {
@@ -226,28 +228,34 @@ function handleLogout() {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 12px;
-  background: var(--bg-dark);
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-hairline);
+  transition: all 0.3s ease;
+}
+
+.user-info:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-soft);
 }
 
 .user-avatar {
-  width: 28px;
-  height: 28px;
-  background: var(--primary-gradient);
+  width: 32px;
+  height: 32px;
+  background: var(--primary-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: #fff;
+  color: white;
 }
 
 .username {
-  color: var(--text-primary);
-  font-size: 13px;
+  color: var(--text-ink);
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -259,30 +267,30 @@ function handleLogout() {
 }
 
 .logout-btn:hover {
-  color: var(--accent-color);
-  background: rgba(245, 87, 108, 0.1);
+  color: var(--primary-color);
+  background: var(--primary-tint);
 }
 
 .layout-main {
-  background: var(--bg-darkest);
-  padding: 24px;
+  background: var(--bg-cream);
+  padding: 28px;
   overflow-y: auto;
 }
 
 /* 页面切换动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .fade-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(8px);
 }
 
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-8px);
 }
 </style>
 
@@ -290,26 +298,57 @@ function handleLogout() {
 /* Element Plus 覆盖 */
 .el-menu {
   border-right: none !important;
-  padding: 8px 0;
+  padding: 12px 0;
+}
+
+.el-menu-item {
+  color: var(--text-secondary) !important;
+  margin: 3px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 400;
+  height: 44px;
+  line-height: 44px;
+}
+
+.el-menu-item:hover {
+  color: var(--text-ink) !important;
+  background: var(--bg-hover) !important;
 }
 
 .el-sub-menu__title {
-  color: #a0a0c0 !important;
-  margin: 2px 8px;
+  color: var(--text-secondary) !important;
+  margin: 3px 12px;
   border-radius: var(--radius-sm);
+  font-weight: 400;
+  height: 44px;
+  line-height: 44px;
 }
 
 .el-sub-menu__title:hover {
-  color: var(--primary-light) !important;
-  background: var(--bg-card-hover) !important;
+  color: var(--text-ink) !important;
+  background: var(--bg-hover) !important;
+}
+
+.el-menu .el-sub-menu__icon-arrow {
+  color: var(--text-muted);
+}
+
+.el-sub-menu .el-menu-item {
+  background: transparent !important;
+  min-width: auto;
+}
+
+.el-sub-menu .el-menu-item:hover {
+  background: var(--bg-hover) !important;
 }
 
 .el-breadcrumb__inner {
   color: var(--text-muted) !important;
+  font-weight: 400;
 }
 
 .el-breadcrumb__inner.is-link:hover {
-  color: var(--primary-light) !important;
+  color: var(--primary-color) !important;
 }
 
 .el-breadcrumb__separator {
@@ -319,17 +358,20 @@ function handleLogout() {
 /* 菜单激活态 */
 .el-menu-item.is-active {
   position: relative;
+  background: var(--primary-color) !important;
+  color: white !important;
+  font-weight: 500;
 }
 
 .el-menu-item.is-active::before {
   content: '';
   position: absolute;
-  left: 0;
+  left: -12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
+  width: 4px;
   height: 60%;
-  background: var(--primary-gradient);
-  border-radius: 0 3px 3px 0;
+  background: var(--primary-color);
+  border-radius: 0 4px 4px 0;
 }
 </style>

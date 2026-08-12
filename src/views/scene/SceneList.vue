@@ -162,7 +162,7 @@ onMounted(fetchScenes)
 .header-actions { display: flex; gap: 12px; align-items: center; }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-.scene-card { background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s ease; }
+.scene-card { background: var(--bg-white); border: 1px solid var(--border-hairline); cursor: pointer; transition: all 0.3s ease; }
 .scene-card:hover { transform: translateY(-2px); border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .scene-name { color: var(--text-secondary); font-size: 15px; font-weight: 600; }

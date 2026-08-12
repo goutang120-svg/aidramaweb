@@ -273,7 +273,7 @@ watch(projectId, (newId) => {
 .empty-wrap { padding: 60px 0; }
 
 .season-card {
-  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: var(--bg-white); border: 1px solid var(--border-hairline); border-radius: var(--radius-lg);
   margin-bottom: 16px; cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -286,10 +286,10 @@ watch(projectId, (newId) => {
 .season-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .season-episodes { color: var(--text-muted); font-size: 13px; }
 .season-desc { color: var(--text-muted); font-size: 13px; margin-top: 8px; line-height: 1.5; }
-.season-actions { display: flex; gap: 4px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+.season-actions { display: flex; gap: 4px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-hairline); }
 
 /* 展开集数 */
-.episode-list { border-top: 1px solid var(--border-color); padding: 12px 16px 16px; }
+.episode-list { border-top: 1px solid var(--border-hairline); padding: 12px 16px 16px; }
 .episode-list-header {
   display: flex; align-items: center; justify-content: space-between;
   color: var(--text-muted); font-size: 13px; margin-bottom: 10px;
@@ -298,10 +298,10 @@ watch(projectId, (newId) => {
 .episode-empty { color: var(--text-muted); font-size: 13px; padding: 20px 0; text-align: center; }
 .episode-item {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-input);
+  padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg-white);
   margin-bottom: 6px; cursor: pointer; transition: background 0.2s;
 }
-.episode-item:hover { background: var(--bg-card-hover); }
+.episode-item:hover { background: var(--bg-hover); }
 .ep-no { color: var(--primary-color); font-size: 13px; font-weight: 500; min-width: 36px; }
 .ep-title { color: var(--text-secondary); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

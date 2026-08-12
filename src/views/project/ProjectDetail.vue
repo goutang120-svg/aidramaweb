@@ -52,6 +52,17 @@
       </el-descriptions>
     </el-card>
 
+    <!-- 多维度进度分解 -->
+    <ProgressBreakdown
+      v-if="progressData"
+      :overall="progressData.overallProgress"
+      overall-label="综合进度"
+      title="项目综合进度"
+      :subtitle="`分集 55% · 故事圣经 15% · 人物 15% · 场景 15%`"
+      :dimensions="projectDimensions"
+      class="project-progress"
+    />
+
     <!-- 统计卡片行 - 可点击跳转 -->
     <el-row :gutter="16" class="stats-row" v-if="project.id">
       <el-col :xs="12" :sm="8" :md="4">
@@ -196,8 +207,10 @@ import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Edit, Plus, Loading } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { getProject, updateProject, listAll, listCharacters, listScenes, listProps, getAssets } from '@/api/index'
+import { getProject, updateProject, listAll, listCharacters, listScenes, listProps, getAssets, getProjectProgress } from '@/api/index'
 import type { Project } from '@/types'
+import type { ProjectProgressVO } from '@/api/index'
+import ProgressBreakdown from '@/components/ProgressBreakdown.vue'
 
 interface EpisodeRow {
   id: number
@@ -240,8 +253,29 @@ const stats = ref({
 })
 
 const episodes = ref<EpisodeRow[]>([])
+const progressData = ref<ProjectProgressVO | null>(null)
+
+const projectDimensions = computed(() => {
+  const p = progressData.value
+  if (!p) return []
+  return [
+    { key: 'episode',   label: '分集平均',   value: p.episodeProgress,   weight: 55,
+      caption: `${p.completedEpisodes}/${p.totalEpisodes} 集已完成 · 镜头 ${p.completedShots}/${p.totalShots}` },
+    { key: 'story',     label: '故事圣经',   value: p.storyProgress,     weight: 15,
+      caption: `${p.completedStoryBibles}/${p.totalStoryBibles} 条已完成` },
+    { key: 'character', label: '人物',       value: p.characterProgress, weight: 15,
+      caption: `${p.completedCharacters}/${p.totalCharacters} 位人物已完成` },
+    { key: 'scene',     label: '场景',       value: p.sceneProgress,     weight: 15,
+      caption: `${p.totalScenes} 个场景` },
+    { key: 'prop',      label: '道具',       value: p.propProgress,
+      caption: `${p.totalProps} 个道具（不参与总权重）` },
+    { key: 'shot-avg',  label: '镜头制作平均', value: p.shotProgress,
+      caption: '来自各分集镜头完成度' },
+  ]
+})
 
 const projectProgress = computed(() => {
+  if (progressData.value) return progressData.value.overallProgress
   const { characters, scenes, episodes: eps, shots } = stats.value
   if (!characters && !scenes && !eps && !shots) return 0
   if (stats.value.episodes > 0 && stats.value.shots > 0) return 50
@@ -313,6 +347,15 @@ async function fetchProject() {
   } finally {
     loading.value = false
   }
+}
+
+async function fetchProgress() {
+  const id = Number(route.params.id)
+  if (!id) return
+  try {
+    const res = await getProjectProgress(id)
+    progressData.value = res.data.data as ProjectProgressVO
+  } catch { /* ignore */ }
 }
 
 async function fetchStats() {
@@ -425,6 +468,7 @@ async function handleSubmit() {
 
 onMounted(() => {
   fetchProject()
+  fetchProgress()
   fetchStats()
 })
 </script>
@@ -441,8 +485,8 @@ onMounted(() => {
 
 /* 项目信息卡片 */
 .info-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-lg);
   margin-bottom: 20px;
 }
@@ -461,7 +505,7 @@ onMounted(() => {
 }
 
 .project-name {
-  color: var(--text-primary);
+  color: var(--text-ink);
   font-size: 20px;
   font-weight: 700;
   margin: 0;
@@ -490,17 +534,21 @@ onMounted(() => {
   text-align: right;
 }
 
+.project-progress {
+  margin: 20px 0;
+}
+
 /* 统计卡片 */
 .stats-row {
   margin-bottom: 20px;
 }
 
 .stat-card {
-  background: var(--bg-card);
+  background: var(--bg-white);
   border-radius: var(--radius-lg);
   padding: 18px 16px;
   margin-bottom: 14px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-hairline);
   border-top: 3px solid transparent;
   text-align: center;
   transition: all 0.3s ease;
@@ -528,8 +576,8 @@ onMounted(() => {
 
 /* 分集进度 */
 .episode-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-lg);
 }
 
@@ -537,7 +585,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: var(--text-primary);
+  color: var(--text-ink);
   font-weight: 600;
 }
 
@@ -564,14 +612,14 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
   padding: 10px 12px;
-  background: var(--bg-input);
+  background: var(--bg-white);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .episode-item:hover {
-  background: var(--bg-card-hover);
+  background: var(--bg-hover);
 }
 
 .episode-info {

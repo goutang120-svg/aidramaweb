@@ -46,6 +46,59 @@ export function deleteOne(url: string, params?: Record<string, unknown>) {
   return request.delete<Result<void>>(url, { params })
 }
 
+// --- Progress ---
+export interface ProjectProgressVO {
+  projectId: number
+  projectName: string
+  overallProgress: number
+  episodeProgress: number
+  storyProgress: number
+  characterProgress: number
+  sceneProgress: number
+  propProgress: number
+  scriptProgress: number
+  storyboardProgress: number
+  shotProgress: number
+  assetProgress: number
+  videoProgress: number
+  postProgress: number
+  imageProgress: number
+  videoAssetProgress: number
+  audioProgress: number
+  totalEpisodes: number
+  completedEpisodes: number
+  totalShots: number
+  completedShots: number
+  totalCharacters: number
+  completedCharacters: number
+  totalScenes: number
+  totalProps: number
+  totalStoryBibles: number
+  completedStoryBibles: number
+  totalImages: number
+  totalVideos: number
+  totalAudios: number
+}
+export interface EpisodeProgressVO {
+  episodeId: number
+  overallProgress: number
+  scriptProgress: number
+  storyboardProgress: number
+  shotProgress: number
+  assetProgress: number
+  videoProgress: number
+  postProgress: number
+  totalShots: number
+  completedShots: number
+  inProgressShots: number
+}
+export function getProjectProgress(id: number) {
+  return request.get<Result<ProjectProgressVO>>('/projects/progress', { params: { id } })
+}
+export function getEpisodeProgress(id: number) {
+  return request.get<Result<EpisodeProgressVO>>('/seasons/episodes/progress', { params: { id } })
+}
+
 // --- Asset ---
 export function getUploadUrl(data: Record<string, unknown>) {
   return request.post<Result<{ uploadUrl: string; objectKey: string; bucketName: string }>>('/assets/upload-url', data)

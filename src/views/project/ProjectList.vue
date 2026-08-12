@@ -348,8 +348,8 @@ onMounted(() => {
 
 /* 项目卡片 */
 .project-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-lg);
   margin-bottom: 16px;
   cursor: pointer;

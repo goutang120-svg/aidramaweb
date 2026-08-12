@@ -1,173 +1,150 @@
 <template>
   <div class="episode-detail">
     <div v-loading="loading.episode" class="detail-container">
-      <!-- 顶部信息 -->
       <div class="ep-header">
         <el-button text @click="goBack" class="back-btn">
-          <el-icon><ArrowLeft /></el-icon> 返回
+          <el-icon><ArrowLeft /></el-icon> 返回分集列表
         </el-button>
-        <div class="ep-info">
-          <div class="ep-title-row">
-            <span class="ep-no">#{{ episode.episodeNo }}</span>
-            <span class="ep-title">{{ episode.title }}</span>
+        <div class="ep-hero">
+          <div class="hero-main">
+            <div class="ep-title-row">
+              <span class="ep-no">#{{ episode.episodeNo }}</span>
+              <h1 class="ep-title">{{ episode.title || '分集详情' }}</h1>
+            </div>
+            <div v-if="episode.summary" class="ep-summary">{{ episode.summary }}</div>
+            <div class="workflow-strip">
+              <div v-for="item in workflowItems" :key="item.key" class="workflow-item">
+                <span class="workflow-dot" :style="{ background: statusColor(episode[item.key]) }"></span>
+                <span class="workflow-label">{{ item.label }}</span>
+                <span class="workflow-status">{{ statusLabel(episode[item.key]) }}</span>
+              </div>
+            </div>
           </div>
-          <div v-if="episode.summary" class="ep-summary">{{ episode.summary }}</div>
-          <div class="ep-progress-row">
-            <span>整体进度</span>
+          <div class="progress-card">
+            <span class="progress-caption">整体进度</span>
+            <strong>{{ progressData?.overallProgress ?? episode.progress ?? 0 }}%</strong>
             <el-progress
-              :percentage="episode.progress || 0"
-              :color="progressColor(episode.progress)"
-              :stroke-width="8"
-              style="flex:1;margin:0 12px"
+              :percentage="progressData?.overallProgress ?? episode.progress ?? 0"
+              :color="progressColor(progressData?.overallProgress ?? episode.progress)"
+              :stroke-width="7" :show-text="false"
             />
-            <span>{{ episode.progress || 0 }}%</span>
+            <div class="progress-hint">动态计算 · 由 6 维加权</div>
           </div>
         </div>
       </div>
 
+      <!-- Progress breakdown -->
+      <ProgressBreakdown
+        v-if="progressData"
+        :overall="progressData.overallProgress"
+        overall-label="综合进度"
+        title="分集制作进度"
+        :subtitle="`剧本 15% · 分镜 15% · 镜头 30% · 资产 15% · 视频 15% · 后期 10%`"
+        :dimensions="episodeDimensions"
+        class="detail-progress"
+      />
+
       <!-- Tab 导航 -->
       <el-tabs v-model="activeTab" class="detail-tabs">
-        <!-- 剧本 tab -->
-        <el-tab-pane label="剧本" name="script">
+        <el-tab-pane name="script">
+          <template #label><span class="tab-label"><el-icon><Document /></el-icon>剧本</span></template>
           <div class="tab-content">
             <div class="tab-toolbar">
-              <span class="tab-label">剧本内容 (Markdown)</span>
+              <div><span class="tab-heading">剧本内容</span><span class="tab-subtitle">Markdown 编辑器</span></div>
               <div class="tab-actions">
+                <span class="content-count">{{ scriptForm.content.length }} 字</span>
                 <input ref="scriptFileInput" type="file" accept=".md,.txt" style="display:none" @change="handleScriptFile" />
-                <el-button size="small" @click="($refs.scriptFileInput as HTMLInputElement).click()">导入MD</el-button>
-                <el-button v-if="activeScriptVersion" size="small" @click="setScriptCurrent(activeScriptVersion)">
-                  设为当前版本
-                </el-button>
-                <el-button type="primary" size="small" :loading="savingScript" @click="saveScript">保存</el-button>
+                <el-button size="small" plain class="toolbar-btn" @click="($refs.scriptFileInput as HTMLInputElement).click()"><el-icon><Upload /></el-icon> 导入 MD</el-button>
+                <el-button v-if="activeScriptVersion" size="small" plain class="toolbar-btn" @click="setScriptCurrent(activeScriptVersion)"><el-icon><CircleCheck /></el-icon> 设为当前</el-button>
+                <el-button type="primary" size="small" class="btn-save" :loading="savingScript" @click="saveScript"><el-icon><Check /></el-icon> 保存</el-button>
               </div>
             </div>
-            <el-input
-              v-model="scriptForm.content"
-              type="textarea"
-              :rows="18"
-              placeholder="在此编写剧本内容，支持Markdown格式..."
-              class="script-editor"
-            />
+            <el-input v-model="scriptForm.content" type="textarea" :rows="18" placeholder="在此编写剧本内容，支持Markdown格式..." class="script-editor" />
+            <div class="editor-footer"><span>{{ scriptForm.content.length }} 字符</span><span>保存后将生成新版本</span></div>
             <div class="version-section">
-              <span class="version-title">版本历史</span>
+              <div class="section-heading"><span class="version-title">版本历史</span><span class="version-count">{{ scriptVersions.length }} 个版本</span></div>
               <div v-loading="loading.scriptVersions" class="version-list">
-                <div v-if="scriptVersions.length === 0" class="no-data">暂无版本记录</div>
-                <div
-                  v-for="v in scriptVersions"
-                  :key="v.id"
-                  class="version-item"
-                  :class="{ active: activeScriptVersion === v.id }"
-                  @click="activeScriptVersion = v.id"
-                >
-                  <span class="v-number">v{{ v.version }}</span>
-                  <span class="v-time">{{ formatDate(v.createdAt) }}</span>
-                  <el-tag v-if="v.isCurrent" size="small" type="success">当前</el-tag>
+                <div v-if="scriptVersions.length === 0" class="no-data"><el-icon><Clock /></el-icon><span>暂无版本记录</span></div>
+                <div v-for="v in scriptVersions" :key="v.id" class="version-item" :class="{ active: activeScriptVersion === v.id }" @click="activeScriptVersion = v.id">
+                  <span class="version-indicator"></span><span class="v-number">v{{ v.version }}</span><span class="v-time">{{ formatDate(v.createdAt) }}</span><el-tag v-if="v.isCurrent" size="small" type="success">当前</el-tag>
                 </div>
               </div>
             </div>
           </div>
         </el-tab-pane>
 
-        <!-- 分镜 tab -->
-        <el-tab-pane label="分镜" name="storyboard">
+        <el-tab-pane name="storyboard">
+          <template #label><span class="tab-label"><el-icon><VideoCamera /></el-icon>分镜</span></template>
           <div class="tab-content">
             <div class="tab-toolbar">
-              <span class="tab-label">分镜内容</span>
+              <div><span class="tab-heading">分镜内容</span><span class="tab-subtitle">镜头设计文档</span></div>
               <div class="tab-actions">
+                <span class="content-count">{{ storyboardForm.content.length }} 字</span>
                 <input ref="storyboardFileInput" type="file" accept=".md,.txt" style="display:none" @change="handleStoryboardFile" />
-                <el-button size="small" @click="($refs.storyboardFileInput as HTMLInputElement).click()">导入MD</el-button>
-                <el-button v-if="activeStoryboardVersion" size="small" @click="setStoryboardCurrent(activeStoryboardVersion)">
-                  设为当前版本
-                </el-button>
-                <el-button type="primary" size="small" :loading="savingStoryboard" @click="saveStoryboard">保存</el-button>
+                <el-button size="small" plain class="toolbar-btn" @click="($refs.storyboardFileInput as HTMLInputElement).click()"><el-icon><Upload /></el-icon> 导入 MD</el-button>
+                <el-button v-if="activeStoryboardVersion" size="small" plain class="toolbar-btn" @click="setStoryboardCurrent(activeStoryboardVersion)"><el-icon><CircleCheck /></el-icon> 设为当前</el-button>
+                <el-button type="primary" size="small" class="btn-save" :loading="savingStoryboard" @click="saveStoryboard"><el-icon><Check /></el-icon> 保存</el-button>
               </div>
             </div>
-            <el-input
-              v-model="storyboardForm.content"
-              type="textarea"
-              :rows="18"
-              placeholder="在此编写分镜内容..."
-              class="script-editor"
-            />
+            <el-input v-model="storyboardForm.content" type="textarea" :rows="18" placeholder="在此编写分镜内容..." class="script-editor" />
+            <div class="editor-footer"><span>{{ storyboardForm.content.length }} 字符</span><span>保存后将生成新版本</span></div>
             <div class="version-section">
-              <span class="version-title">版本历史</span>
+              <div class="section-heading"><span class="version-title">版本历史</span><span class="version-count">{{ storyboardVersions.length }} 个版本</span></div>
               <div v-loading="loading.storyboardVersions" class="version-list">
-                <div v-if="storyboardVersions.length === 0" class="no-data">暂无版本记录</div>
-                <div
-                  v-for="v in storyboardVersions"
-                  :key="v.id"
-                  class="version-item"
-                  :class="{ active: activeStoryboardVersion === v.id }"
-                  @click="activeStoryboardVersion = v.id"
-                >
-                  <span class="v-number">v{{ v.version }}</span>
-                  <span class="v-time">{{ formatDate(v.createdAt) }}</span>
-                  <el-tag v-if="v.isCurrent" size="small" type="success">当前</el-tag>
+                <div v-if="storyboardVersions.length === 0" class="no-data"><el-icon><Clock /></el-icon><span>暂无版本记录</span></div>
+                <div v-for="v in storyboardVersions" :key="v.id" class="version-item" :class="{ active: activeStoryboardVersion === v.id }" @click="activeStoryboardVersion = v.id">
+                  <span class="version-indicator"></span><span class="v-number">v{{ v.version }}</span><span class="v-time">{{ formatDate(v.createdAt) }}</span><el-tag v-if="v.isCurrent" size="small" type="success">当前</el-tag>
                 </div>
               </div>
             </div>
           </div>
         </el-tab-pane>
 
-        <!-- 镜头 tab -->
-        <el-tab-pane label="镜头" name="shots">
+        <el-tab-pane name="shots">
+          <template #label><span class="tab-label"><el-icon><Film /></el-icon>镜头</span></template>
           <div class="tab-content">
             <div class="tab-toolbar">
-              <span class="tab-label">镜头列表</span>
-              <div style="display:flex;gap:8px">
+              <div><span class="tab-heading">镜头列表</span><span class="tab-subtitle">{{ shots.length }} 个镜头</span></div>
+              <div class="tab-actions">
                 <input ref="shotsFileInput" type="file" accept=".md,.txt" style="display:none" @change="handleShotsFile" />
-                <el-button size="small" @click="($refs.shotsFileInput as HTMLInputElement).click()">导入分镜MD</el-button>
-                <el-button type="primary" size="small" @click="openShotDialog()">
-                  <el-icon><Plus /></el-icon> 添加镜头
-                </el-button>
+                <el-button size="small" plain class="toolbar-btn" @click="($refs.shotsFileInput as HTMLInputElement).click()"><el-icon><Upload /></el-icon> 导入分镜 MD</el-button>
+                <el-button type="primary" size="small" class="btn-save" @click="openShotDialog()"><el-icon><Plus /></el-icon> 添加镜头</el-button>
               </div>
             </div>
-            <el-table
-              :data="shots"
-              v-loading="loading.shots"
-              class="dark-table"
-              size="small"
-              @row-click="goShot"
-              style="cursor:pointer"
-            >
+            <div v-if="!loading.shots && shots.length === 0" class="table-empty">
+              <div class="empty-icon-wrap small"><el-icon size="30"><Film /></el-icon></div>
+              <p>暂无镜头</p><span>可以手动添加镜头，或导入分镜 Markdown 文件</span>
+              <el-button size="small" plain @click="openShotDialog()"><el-icon><Plus /></el-icon> 添加第一个镜头</el-button>
+            </div>
+            <el-table v-else :data="shots" v-loading="loading.shots" class="dark-table" size="small" @row-click="goShot" style="cursor:pointer">
               <el-table-column prop="shotNo" label="镜头号" width="80" />
               <el-table-column prop="shotCode" label="编号" width="140" />
-              <el-table-column prop="shotType" label="类型" width="100">
-                <template #default="{ row }">{{ shotTypeLabel(row.shotType) }}</template>
-              </el-table-column>
+              <el-table-column prop="shotType" label="类型" width="100"><template #default="{ row }">{{ shotTypeLabel(row.shotType) }}</template></el-table-column>
               <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-              <el-table-column prop="status" label="状态" width="100">
-                <template #default="{ row }">
-                  <el-tag :color="statusColor(row.status)" effect="dark" size="small" style="border-color:transparent">
-                    {{ statusLabel(row.status) }}
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="120" fixed="right">
-                <template #default="{ row }">
-                  <el-button text size="small" @click.stop="openShotDialog(row)">编辑</el-button>
-                  <el-button text size="small" type="danger" @click.stop="handleShotDelete(row)">删除</el-button>
-                </template>
-              </el-table-column>
+              <el-table-column prop="status" label="状态" width="100"><template #default="{ row }"><el-tag :color="statusColor(row.status)" effect="dark" size="small" class="status-tag">{{ statusLabel(row.status) }}</el-tag></template></el-table-column>
+              <el-table-column label="操作" width="120" fixed="right"><template #default="{ row }"><el-button text size="small" @click.stop="openShotDialog(row)">编辑</el-button><el-button text size="small" type="danger" @click.stop="handleShotDelete(row)">删除</el-button></template></el-table-column>
             </el-table>
           </div>
         </el-tab-pane>
 
-        <!-- 资产 tab -->
-        <el-tab-pane label="资产" name="assets">
+        <el-tab-pane name="assets">
+          <template #label><span class="tab-label"><el-icon><PictureFilled /></el-icon>资产</span></template>
           <div class="tab-content">
             <div class="tab-toolbar">
-              <span class="tab-label">关联资产</span>
-              <el-button type="primary" size="small" @click="goAssets">资源中心</el-button>
+              <div><span class="tab-heading">关联资产</span><span class="tab-subtitle">{{ episodeAssets.length }} 个资产</span></div>
+              <el-button type="primary" size="small" class="btn-save" @click="goAssets"><el-icon><FolderOpened /></el-icon> 资源中心</el-button>
             </div>
             <div v-loading="loading.assets" class="asset-grid">
-              <div v-if="episodeAssets.length === 0 && !loading.assets" class="no-data">暂无关联资产</div>
+              <div v-if="episodeAssets.length === 0 && !loading.assets" class="asset-empty">
+                <div class="empty-icon-wrap small"><el-icon size="30"><PictureFilled /></el-icon></div>
+                <p>暂无关联资产</p><span>前往资源中心为本集管理图片、视频和文档</span>
+                <el-button size="small" plain @click="goAssets"><el-icon><FolderOpened /></el-icon> 打开资源中心</el-button>
+              </div>
               <div v-for="asset in episodeAssets" :key="asset.id" class="asset-item">
                 <div class="asset-thumb">
                   <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" />
-                  <el-icon v-else :size="32" color="#4a4a6e"><PictureFilled /></el-icon>
-                  <el-button class="asset-delete-btn" size="small" type="danger" circle
-                    @click.stop="handleEpisodeAssetDelete(asset)">
+                  <el-icon v-else :size="32" class="asset-placeholder"><PictureFilled /></el-icon>
+                  <el-button class="asset-delete-btn" size="small" type="danger" circle @click.stop="handleEpisodeAssetDelete(asset)">
                     <el-icon :size="12"><Delete /></el-icon>
                   </el-button>
                 </div>
@@ -272,15 +249,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Plus, PictureFilled, Delete } from '@element-plus/icons-vue'
+import {
+  ArrowLeft, Plus, PictureFilled, Delete, Document, VideoCamera,
+  Film, Upload, CircleCheck, Check, Clock, FolderOpened,
+} from '@element-plus/icons-vue'
 import {
   getOne, listAll, createOne, updateOne, deleteOne,
   getAssets, getUploadUrl, createAsset,
+  getEpisodeProgress,
 } from '@/api/index'
 import type { AssetVO } from '@/types'
+import type { EpisodeProgressVO } from '@/api/index'
+import ProgressBreakdown from '@/components/ProgressBreakdown.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -288,6 +271,29 @@ const episodeId = Number(route.params.id)
 
 const activeTab = ref('script')
 const episode = ref<Record<string, any>>({})
+const progressData = ref<EpisodeProgressVO | null>(null)
+
+const episodeDimensions = computed(() => {
+  const p = progressData.value
+  if (!p) return []
+  return [
+    { key: 'script',     label: '剧本',     value: p.scriptProgress,     weight: 15, caption: '按剧本工作流状态计分' },
+    { key: 'storyboard', label: '分镜',     value: p.storyboardProgress, weight: 15, caption: '按分镜工作流状态计分' },
+    { key: 'shot',       label: '镜头制作', value: p.shotProgress,       weight: 30,
+      caption: `${p.completedShots}/${p.totalShots} 已完成，${p.inProgressShots} 进行中` },
+    { key: 'asset',      label: '资产',     value: p.assetProgress,      weight: 15, caption: '关联资产就绪度' },
+    { key: 'video',      label: '视频',     value: p.videoProgress,      weight: 15, caption: '视频生成进度' },
+    { key: 'post',       label: '后期',     value: p.postProgress,       weight: 10, caption: '剪辑与调色状态' },
+  ]
+})
+
+const workflowItems = [
+  { key: 'scriptStatus', label: '剧本' },
+  { key: 'storyboardStatus', label: '分镜' },
+  { key: 'assetStatus', label: '资产' },
+  { key: 'videoStatus', label: '视频' },
+  { key: 'postStatus', label: '后期' },
+]
 
 const loading = reactive({
   episode: false,
@@ -342,14 +348,14 @@ function statusLabel(status: string): string {
   return map[status] || status || '未开始'
 }
 function statusColor(status: string): string {
-  const map: Record<string, string> = { NOT_STARTED: '#909399', IN_PROGRESS: '#e8a850', COMPLETED: '#67c23a' }
-  return map[status] || '#909399'
+  const map: Record<string, string> = { NOT_STARTED: '#6b6b82', IN_PROGRESS: '#a78bfa', COMPLETED: '#38ef7d' }
+  return map[status] || '#6b6b82'
 }
 function progressColor(prog: number): string {
-  if (!prog) return '#409eff'
-  if (prog >= 100) return '#67c23a'
-  if (prog >= 50) return '#e8a850'
-  return '#409eff'
+  if (!prog) return '#667eea'
+  if (prog >= 100) return '#38ef7d'
+  if (prog >= 50) return '#a78bfa'
+  return '#667eea'
 }
 function shotTypeLabel(type: string): string {
   const map: Record<string, string> = {
@@ -392,6 +398,13 @@ async function fetchEpisode() {
   }
 }
 
+async function fetchProgress() {
+  try {
+    const res = await getEpisodeProgress(episodeId)
+    progressData.value = res.data.data as EpisodeProgressVO
+  } catch { /* ignore */ }
+}
+
 // --- Script ---
 async function fetchScripts() {
   loading.scriptVersions = true
@@ -415,7 +428,7 @@ async function saveScript() {
   try {
     await createOne('/episodes/scripts', { content: scriptForm.content }, { episodeId })
     ElMessage.success('剧本保存成功')
-    await fetchScripts()
+    await fetchScripts(); await fetchProgress()
   } catch { /* handled */ } finally { savingScript.value = false }
 }
 
@@ -423,7 +436,7 @@ async function setScriptCurrent(versionId: number) {
   try {
     await updateOne('/episodes/scripts/set-current', {}, { episodeId, id: versionId })
     ElMessage.success('已设为当前版本')
-    await fetchScripts()
+    await fetchScripts(); await fetchProgress()
   } catch { /* handled */ }
 }
 
@@ -450,7 +463,7 @@ async function saveStoryboard() {
   try {
     await createOne('/episodes/storyboards', { content: storyboardForm.content }, { episodeId })
     ElMessage.success('分镜保存成功')
-    await fetchStoryboards()
+    await fetchStoryboards(); await fetchProgress()
   } catch { /* handled */ } finally { savingStoryboard.value = false }
 }
 
@@ -458,7 +471,7 @@ async function setStoryboardCurrent(versionId: number) {
   try {
     await updateOne('/episodes/storyboards/set-current', {}, { episodeId, id: versionId })
     ElMessage.success('已设为当前版本')
-    await fetchStoryboards()
+    await fetchStoryboards(); await fetchProgress()
   } catch { /* handled */ }
 }
 
@@ -502,7 +515,7 @@ async function handleShotSubmit() {
       ElMessage.success('添加成功')
     }
     shotDialogVisible.value = false
-    await fetchShots()
+    await fetchShots(); await fetchProgress()
   } catch { /* handled */ } finally { shotSubmitting.value = false }
 }
 
@@ -513,7 +526,7 @@ async function handleShotDelete(row: any) {
     })
     await deleteOne('/episodes/shots', { episodeId, id: row.id })
     ElMessage.success('删除成功')
-    await fetchShots()
+    await fetchShots(); await fetchProgress()
   } catch { /* cancelled */ }
 }
 
@@ -585,12 +598,13 @@ async function handleShotsImport() {
     ElMessage.success(`成功导入 ${parsedShots.value.length} 个镜头`)
     shotsImportVisible.value = false
     parsedShots.value = []
-    await fetchShots()
+    await fetchShots(); await fetchProgress()
   } catch { /* handled */ } finally { importingShots.value = false }
 }
 
 onMounted(() => {
   fetchEpisode()
+  fetchProgress()
   fetchScripts()
   fetchStoryboards()
   fetchShots()
@@ -599,77 +613,56 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.episode-detail { padding: 4px; }
-.detail-container { max-width: 1200px; }
-
-/* 头部 */
-.ep-header { margin-bottom: 16px; }
-.back-btn { margin-bottom: 12px; color: #808090; }
-.ep-info {
-  background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 8px;
-  padding: 20px;
-}
-.ep-title-row { margin-bottom: 8px; }
-.ep-no { color: #e8a850; font-size: 14px; font-weight: 500; margin-right: 8px; }
-.ep-title { color: #c0c0d0; font-size: 20px; font-weight: 700; }
-.ep-summary { color: #808090; font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
-.ep-progress-row { display: flex; align-items: center; color: #6a6a7e; font-size: 13px; }
-
-/* Tabs */
+.episode-detail { min-height: 100%; padding: 4px; }
+.detail-container { max-width: 1240px; margin: 0 auto; }
+.ep-header { margin-bottom: 18px; }
+.back-btn { margin-bottom: 12px; padding-left: 0; color: var(--text-muted); }
+.back-btn:hover { color: var(--primary-color); }
+.ep-hero { display: flex; justify-content: space-between; gap: 24px; padding: 24px 28px; background: linear-gradient(135deg, var(--primary-tint), rgba(118,75,162,.06) 55%, transparent); border: 1px solid var(--border-hairline); border-left: 4px solid var(--primary-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.hero-main { min-width: 0; flex: 1; }
+.ep-title-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.ep-no { color: var(--primary-color); font-size: 14px; font-weight: 600; }
+.ep-title { margin: 0; color: var(--text-ink); font-size: 24px; font-weight: 700; }
+.ep-summary { max-width: 760px; margin: 0 0 18px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
+.workflow-strip { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.workflow-item { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 12px; }
+.workflow-dot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+.workflow-status { color: var(--text-secondary); }
+.progress-card { align-self: center; width: 150px; flex-shrink: 0; padding: 14px; background: rgba(18,18,42,.35); border: 1px solid var(--border-hairline); border-radius: var(--radius-md); }
+.progress-caption { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 12px; }
+.progress-card strong { display: block; margin-bottom: 9px; color: var(--text-ink); font-size: 22px; }
+.progress-hint { margin-top: 6px; color: var(--text-secondary); font-size: 10px; }
+.detail-progress { margin-top: 16px; }
 .detail-tabs { margin-top: 8px; }
-.tab-content { padding: 4px 0; }
-.tab-toolbar {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
-}
-.tab-label { color: #c0c0d0; font-size: 14px; font-weight: 500; }
-.tab-actions { display: flex; gap: 8px; }
-
-/* 编辑器 */
-.script-editor :deep(textarea) {
-  background: #16162a; color: #c0c0d0; border-color: #2a2a3e;
-  font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.6;
-}
-.script-editor :deep(textarea):focus { border-color: #e8a850; }
-
-/* 版本历史 */
-.version-section { margin-top: 16px; }
-.version-title { color: #808090; font-size: 13px; font-weight: 500; display: block; margin-bottom: 8px; }
-.version-list { max-height: 200px; overflow-y: auto; }
-.no-data { color: #6a6a7e; font-size: 13px; padding: 20px 0; text-align: center; }
-.version-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px; border-radius: 6px; background: #16162a;
-  margin-bottom: 6px; cursor: pointer; transition: background 0.2s;
-}
-.version-item:hover { background: #2a2a3e; }
-.version-item.active { border: 1px solid #e8a850; }
-.v-number { color: #e8a850; font-size: 13px; font-weight: 500; min-width: 50px; }
-.v-time { color: #808090; font-size: 12px; flex: 1; }
-
-/* 资产网格 */
-.asset-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 12px;
-}
-.asset-item {
-  background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 8px;
-  overflow: hidden; transition: border-color 0.2s;
-}
-.asset-item:hover { border-color: #e8a850; }
-.asset-delete-btn {
-  position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
-}
-.asset-thumb:hover .asset-delete-btn { opacity: 1; }
-.asset-thumb {
-  width: 100%; height: 120px; background: #16162a;
-  display: flex; align-items: center; justify-content: center; overflow: hidden;
-  position: relative;
-}
-.asset-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.asset-name {
-  padding: 6px 10px 0; font-size: 12px; color: #c0c0d0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.asset-item .el-tag { margin: 6px 10px 8px; }
+.detail-tabs :deep(.el-tabs__header) { margin-bottom: 0; border-bottom: 1px solid var(--border-hairline); }
+.detail-tabs :deep(.el-tabs__nav-wrap::after) { background-color: transparent; }
+.detail-tabs :deep(.el-tabs__item) { height: 46px; color: var(--text-muted); font-size: 13px; }
+.detail-tabs :deep(.el-tabs__item.is-active) { color: var(--primary-color); }
+.detail-tabs :deep(.el-tabs__active-bar) { height: 2px; background: var(--primary-color); }
+.tab-content { padding: 18px 0 6px; }
+.tab-label { display: inline-flex; align-items: center; gap: 5px; }
+.tab-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.tab-heading { color: var(--text-ink); font-size: 14px; font-weight: 600; }
+.tab-subtitle { margin-left: 8px; color: var(--text-muted); font-size: 11px; }
+.tab-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
+.content-count { color: var(--text-muted); font-size: 11px; }
+.toolbar-btn { background: var(--bg-white) !important; border-color: var(--border-hairline) !important; color: var(--text-secondary) !important; }
+.toolbar-btn:hover { border-color: var(--primary-color) !important; color: var(--primary-color) !important; }
+.btn-save { background: var(--primary-color) !important; color: white !important; border: none !important; font-weight: 600; }
+.script-editor :deep(.el-textarea__inner) { min-height: 360px !important; padding: 18px 20px; background: var(--bg-white); border: 1px solid var(--border-hairline); color: var(--text-ink); font-family: 'JetBrains Mono', 'Consolas', 'Courier New', monospace; font-size: 14px; line-height: 1.75; resize: vertical; }
+.script-editor :deep(.el-textarea__inner):focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-tint); }
+.editor-footer { display: flex; justify-content: space-between; padding: 6px 12px; color: var(--text-muted); font-size: 11px; background: var(--bg-cream); border: 1px solid var(--border-hairline); border-top: none; }
+.version-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-hairline); }
+.section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+.version-title { color: var(--text-secondary); font-size: 13px; font-weight: 600; }
+.version-count { color: var(--text-muted); font-size: 11px; }
+.version-list { max-height: 220px; overflow-y: auto; }
+.no-data { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 100px; color: var(--text-muted); font-size: 13px; }
+.version-item { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; padding: 9px 12px; background: var(--bg-white); border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: all .2s; }
+.version-item:hover { background: var(--bg-cream); border-color: var(--border-hairline); }
+.version-item.active { background: var(--primary-tint); border-color: var(--primary-color); }
+.version-indicator { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+.version-item.active .version-indicator { background: var(--primary-color); box-shadow: 0 0 8px var(--primary-color); }
+.v-number { min-width: 45px; color: var(--primary-color); font-size: 13px; font-weight: 600; }
+.v-time { flex: 1; color: var(--text-muted); font-size: 12px; }
 </style>

@@ -648,7 +648,7 @@ onMounted(() => {
 }
 .vid-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .play-overlay {
-  position: absolute; inset: 0; background: rgba(0,0,0,0.4);
+  position: absolute; inset: 0; background: var(--bg-cream);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity 0.2s;
 }

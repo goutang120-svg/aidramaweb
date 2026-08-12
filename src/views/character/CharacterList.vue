@@ -149,10 +149,10 @@ onMounted(fetchCharacters)
 .header-actions { display: flex; gap: 12px; align-items: center; }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-.char-card { background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.3s ease; }
+.char-card { background: var(--bg-white); border: 1px solid var(--border-hairline); cursor: pointer; transition: all 0.3s ease; }
 .char-card:hover { transform: translateY(-2px); border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .card-avatar { display: flex; justify-content: center; margin-bottom: 12px; }
-.avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; background: var(--primary-gradient); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; }
+.avatar-placeholder { width: 64px; height: 64px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: var(--text-ink); }
 .card-info { text-align: center; }
 .char-name { color: var(--text-secondary); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
 .char-identity { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }

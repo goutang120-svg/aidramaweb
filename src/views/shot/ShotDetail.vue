@@ -864,7 +864,7 @@ watch(activeTab, (tab) => {
 
 /* 信息卡片 */
 .shot-info-card {
-  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: var(--bg-white); border: 1px solid var(--border-hairline); border-radius: var(--radius-lg);
   padding: 20px; margin-bottom: 16px;
 }
 .shot-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
@@ -883,7 +883,7 @@ watch(activeTab, (tab) => {
 /* 描述表单 */
 .desc-form { max-width: 800px; }
 .dark-textarea :deep(textarea) {
-  background: var(--bg-input); color: var(--text-secondary); border-color: var(--border-color);
+  background: var(--bg-white); color: var(--text-secondary); border-color: var(--border-hairline);
   font-size: 14px; line-height: 1.6;
 }
 .dark-textarea :deep(textarea):focus { border-color: var(--primary-color); }
@@ -891,11 +891,11 @@ watch(activeTab, (tab) => {
 
 /* 资产上传 */
 .upload-section {
-  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+  background: var(--bg-white); border: 1px solid var(--border-hairline); border-radius: var(--radius-lg);
   padding: 16px; margin-bottom: 20px;
 }
 .upload-section :deep(.el-upload-dragger) {
-  background: var(--bg-input); border-color: var(--border-color); border-radius: var(--radius-lg);
+  background: var(--bg-white); border-color: var(--border-hairline); border-radius: var(--radius-lg);
 }
 .upload-section :deep(.el-upload-dragger:hover) { border-color: var(--primary-color); }
 .upload-trigger { padding: 24px; text-align: center; }
@@ -917,12 +917,12 @@ watch(activeTab, (tab) => {
   gap: 12px; margin-bottom: 20px;
 }
 .image-item {
-  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  background: var(--bg-white); border: 1px solid var(--border-hairline); border-radius: var(--radius-md);
   overflow: hidden; cursor: pointer; transition: all 0.3s ease;
 }
 .image-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .img-wrap {
-  width: 100%; height: 140px; background: var(--bg-input);
+  width: 100%; height: 140px; background: var(--bg-white);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   position: relative;
 }
@@ -939,18 +939,18 @@ watch(activeTab, (tab) => {
   gap: 12px; margin-bottom: 20px;
 }
 .video-item {
-  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  background: var(--bg-white); border: 1px solid var(--border-hairline); border-radius: var(--radius-md);
   overflow: hidden; cursor: pointer; transition: all 0.3s ease;
 }
 .video-item:hover { border-color: var(--primary-color); box-shadow: var(--shadow-glow); }
 .vid-thumb {
-  width: 100%; height: 120px; background: var(--bg-input);
+  width: 100%; height: 120px; background: var(--bg-white);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   position: relative;
 }
 .vid-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .play-overlay {
-  position: absolute; inset: 0; background: rgba(0,0,0,0.4);
+  position: absolute; inset: 0; background: var(--bg-cream);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity 0.2s;
 }
@@ -964,23 +964,23 @@ watch(activeTab, (tab) => {
 .audio-list { margin-bottom: 20px; }
 .audio-item {
   display: flex; align-items: center; gap: 12px;
-  padding: 10px 14px; background: var(--bg-card); border: 1px solid var(--border-color);
+  padding: 10px 14px; background: var(--bg-white); border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md); margin-bottom: 8px;
 }
 .audio-name { color: var(--text-secondary); font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .audio-player { height: 32px; width: 200px; }
-.audio-player::-webkit-media-controls-panel { background: var(--border-color); }
+.audio-player::-webkit-media-controls-panel { background: var(--border-hairline); }
 .no-preview { color: var(--text-muted); font-size: 12px; }
 
 /* 关联 */
 .relation-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
 .relation-card {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border-color);
+  padding: 12px 16px; background: var(--bg-white); border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md); min-width: 80px; position: relative;
 }
 .rel-avatar {
-  width: 48px; height: 48px; border-radius: 50%; background: var(--bg-input);
+  width: 48px; height: 48px; border-radius: 50%; background: var(--bg-white);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
 .rel-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -989,17 +989,17 @@ watch(activeTab, (tab) => {
 
 /* Relation Picker */
 .picker-search { margin-bottom: 16px; }
-.picker-search :deep(input) { background: var(--bg-input); color: var(--text-secondary); border-color: var(--border-color); }
+.picker-search :deep(input) { background: var(--bg-white); color: var(--text-secondary); border-color: var(--border-hairline); }
 .picker-list { max-height: 360px; overflow-y: auto; }
 .picker-item {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 14px; margin-bottom: 4px;
-  background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  background: var(--bg-white); border: 1px solid var(--border-hairline); border-radius: var(--radius-md);
   cursor: pointer; transition: all 0.3s ease;
 }
 .picker-item:hover { border-color: var(--primary-color); }
 .picker-avatar {
-  width: 36px; height: 36px; border-radius: 50%; background: var(--bg-input);
+  width: 36px; height: 36px; border-radius: 50%; background: var(--bg-white);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
 .picker-avatar img { width: 100%; height: 100%; object-fit: cover; }

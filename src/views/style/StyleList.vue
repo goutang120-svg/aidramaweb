@@ -1,18 +1,32 @@
 <template>
   <div class="style-list">
+    <!-- Header -->
     <div class="page-header">
-      <h2 class="page-title">风格参考</h2>
+      <div class="page-title-group">
+        <el-icon class="title-icon"><Brush /></el-icon>
+        <h2 class="page-title">风格参考</h2>
+        <span class="title-badge">Style</span>
+        <span v-if="filteredList.length" class="count-chip">{{ filteredList.length }} 项</span>
+      </div>
       <div class="header-actions">
         <ProjectSwitcher />
-        <el-button type="primary" @click="openAdd" :disabled="!currentProjectId">新建风格</el-button>
+        <el-button class="btn-create" type="primary" @click="openAdd" :disabled="!currentProjectId">
+          <el-icon><Plus /></el-icon> 新建风格
+        </el-button>
       </div>
     </div>
 
-    <el-empty v-if="!currentProjectId" description="请先选择项目" />
+    <!-- Empty project -->
+    <div v-if="!currentProjectId" class="empty-state">
+      <div class="empty-icon-wrap"><el-icon size="44"><Folder /></el-icon></div>
+      <p class="empty-title">请先选择项目</p>
+      <p class="empty-sub">切换项目后即可管理风格参考</p>
+    </div>
 
     <template v-else>
-      <div class="filter-tabs">
-        <el-radio-group v-model="filterType" size="small">
+      <!-- Filter -->
+      <div class="filter-bar">
+        <el-radio-group v-model="filterType" size="default">
           <el-radio-button value="">全部</el-radio-button>
           <el-radio-button value="ART">美术风格</el-radio-button>
           <el-radio-button value="COLOR">配色方案</el-radio-button>
@@ -23,30 +37,45 @@
         </el-radio-group>
       </div>
 
+      <!-- Grid -->
       <div class="card-grid" v-if="filteredList.length">
-        <el-card v-for="item in filteredList" :key="item.id" class="style-card" shadow="hover">
+        <div v-for="item in filteredList" :key="item.id" class="style-card">
           <div class="style-image" v-if="item.previewUrl">
             <el-image :src="item.previewUrl" fit="cover" :preview-src-list="[item.previewUrl]" />
+            <span class="type-badge" :class="typeClass(item.styleType)">{{ typeLabel(item.styleType) }}</span>
           </div>
           <div class="style-image placeholder" v-else>
-            <el-icon :size="36"><Picture /></el-icon>
+            <el-icon :size="40"><Picture /></el-icon>
+            <span class="type-badge" :class="typeClass(item.styleType)">{{ typeLabel(item.styleType) }}</span>
           </div>
           <div class="style-info">
-            <div class="style-name">{{ item.styleName }}</div>
-            <div class="style-meta">
-              <el-tag size="small" effect="plain">{{ typeLabel(item.styleType) }}</el-tag>
-            </div>
+            <div class="style-name" :title="item.styleName">{{ item.styleName }}</div>
             <div class="style-desc" v-if="item.description">{{ item.description }}</div>
+            <div class="style-desc muted" v-else>暂无描述</div>
           </div>
           <div class="style-actions">
-            <el-button size="small" @click="openEdit(item)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(item)">删除</el-button>
+            <el-button size="small" plain class="action-btn" @click="openEdit(item)">
+              <el-icon><EditPen /></el-icon> 编辑
+            </el-button>
+            <el-button size="small" plain class="action-btn danger" @click="handleDelete(item)">
+              <el-icon><Delete /></el-icon> 删除
+            </el-button>
           </div>
-        </el-card>
+        </div>
       </div>
-      <el-empty v-else description="暂无风格参考数据" />
 
-      <el-dialog v-model="dialogVisible" :title="editingId ? '编辑风格' : '新建风格'" width="540px">
+      <div v-else class="empty-state">
+        <div class="empty-icon-wrap"><el-icon size="44"><Picture /></el-icon></div>
+        <p class="empty-title">暂无风格参考</p>
+        <p class="empty-sub">点击右上角新建按钮添加第一个风格参考</p>
+      </div>
+
+      <el-dialog
+        v-model="dialogVisible"
+        :title="editingId ? '编辑风格' : '新建风格'"
+        width="560px"
+        class="style-dialog"
+      >
         <el-form :model="form" label-position="top">
           <el-form-item label="风格名称" required>
             <el-input v-model="form.styleName" placeholder="请输入风格名称" />
@@ -71,12 +100,13 @@
                 :show-file-list="false"
                 accept="image/*"
               >
-                <el-button :loading="uploading">
+                <el-button :loading="uploading" plain>
+                  <el-icon><Upload /></el-icon>
                   {{ uploading ? '上传中...' : '点击上传' }}
                 </el-button>
               </el-upload>
               <div v-if="uploadedUrl" class="upload-preview">
-                <el-image :src="uploadedUrl" fit="cover" style="width: 120px; height: 80px; border-radius: 4px;" />
+                <el-image :src="uploadedUrl" fit="cover" style="width: 140px; height: 90px; border-radius: 8px;" />
               </div>
             </div>
           </el-form-item>
@@ -93,7 +123,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus'
-import { Picture } from '@element-plus/icons-vue'
+import { Picture, Brush, Plus, Folder, EditPen, Delete, Upload } from '@element-plus/icons-vue'
 import { listAll, createOne, updateOne, deleteOne, getUploadUrl, createAsset } from '@/api/index'
 import { useAppStore } from '@/stores/app'
 import ProjectSwitcher from '@/components/ProjectSwitcher.vue'
@@ -224,32 +254,288 @@ function typeLabel(type: string) {
   return map[type] || type
 }
 
+function typeClass(type: string) {
+  const map: Record<string, string> = {
+    ART: 'badge-art', COLOR: 'badge-color', LIGHTING: 'badge-lighting',
+    COMPOSITION: 'badge-composition', REFERENCE: 'badge-reference', OTHER: 'badge-other',
+  }
+  return map[type] || 'badge-other'
+}
+
 onMounted(fetchStyles)
 </script>
 
 <style scoped>
-.style-list { height: 100%; display: flex; flex-direction: column; }
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-title { color: #e8a850; font-size: 20px; font-weight: 600; }
-.header-actions { display: flex; gap: 12px; align-items: center; }
+.style-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-.filter-tabs { margin-bottom: 16px; }
-.filter-tabs :deep(.el-radio-button__inner) { background: #16162a; border-color: #2a2a3e; color: #808090; }
-.filter-tabs :deep(.el-radio-button__inner:hover) { color: #e8a850; }
-.filter-tabs :deep(.is-active .el-radio-button__inner) { background: #e8a850; border-color: #e8a850; color: #1a1a2e; }
+/* ===== Header ===== */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.page-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.title-icon {
+  font-size: 22px;
+  color: var(--primary-color);
+}
+.page-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-ink);
+  line-height: 1;
+}
+.title-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--primary-color);
+  background: var(--primary-tint);
+  border: 1px solid var(--border-hairline);
+  border-radius: 4px;
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+.count-chip {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-pill);
+  padding: 2px 10px;
+}
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.btn-create {
+  background: var(--primary-color) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 500;
+  gap: 4px;
+}
+.btn-create:hover {
+  background: var(--primary-hover) !important;
+}
 
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
-.style-card { background: #16162a; border: 1px solid #2a2a3e; transition: border-color 0.2s; }
-.style-card:hover { border-color: #e8a850; }
-.style-image { width: 100%; height: 160px; overflow: hidden; border-radius: 4px 4px 0 0; }
-.style-image :deep(.el-image) { width: 100%; height: 100%; }
-.style-image.placeholder { display: flex; align-items: center; justify-content: center; background: #1a1a2e; color: #808090; }
-.style-info { padding: 12px 0; }
-.style-name { color: #c0c0d0; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-.style-meta { margin-bottom: 6px; }
-.style-desc { color: #808090; font-size: 12px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.style-actions { display: flex; gap: 8px; }
+/* ===== Empty state ===== */
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+}
+.empty-icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--primary-tint);
+  border: 1px solid var(--border-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+.empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-ink);
+  margin: 0;
+}
+.empty-sub {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
 
-.upload-section { display: flex; gap: 12px; align-items: center; }
-.upload-preview { border: 1px solid #2a2a3e; border-radius: 4px; overflow: hidden; }
+/* ===== Filter ===== */
+.filter-bar {
+  background: var(--bg-white);
+  padding: 12px 16px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+.filter-bar :deep(.el-radio-button__inner) {
+  background: var(--bg-white);
+  border-color: var(--border-hairline);
+  color: var(--text-body);
+  font-weight: 400;
+}
+.filter-bar :deep(.el-radio-button__inner:hover) {
+  color: var(--primary-color);
+  background: var(--primary-tint);
+}
+.filter-bar :deep(.is-active .el-radio-button__inner) {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: white !important;
+  box-shadow: -1px 0 0 0 var(--primary-color) !important;
+}
+
+/* ===== Card grid ===== */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  padding-bottom: 8px;
+}
+.style-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.style-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-hover);
+}
+
+.style-image {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: var(--bg-cream);
+}
+.style-image :deep(.el-image) {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.4s ease;
+}
+.style-card:hover .style-image :deep(.el-image) {
+  transform: scale(1.04);
+}
+.style-image.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: linear-gradient(135deg, var(--bg-cream) 0%, var(--primary-tint) 100%);
+}
+
+/* Type badge on image */
+.type-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(31, 36, 33, 0.06);
+  box-shadow: 0 1px 3px rgba(31, 36, 33, 0.08);
+}
+.badge-art        { color: #C4612F; }
+.badge-color      { color: #8B4A9C; }
+.badge-lighting   { color: #D4A05C; }
+.badge-composition{ color: #5C8A5C; }
+.badge-reference  { color: #3F7A9C; }
+.badge-other      { color: #6B6762; }
+
+.style-info {
+  padding: 14px 16px 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.style-name {
+  color: var(--text-ink);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.style-desc {
+  color: var(--text-body);
+  font-size: 12px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.style-desc.muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.style-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border-hairline);
+  background: var(--bg-cream);
+}
+.action-btn {
+  flex: 1;
+  background: var(--bg-white) !important;
+  border: 1px solid var(--border-hairline) !important;
+  color: var(--text-body) !important;
+  font-weight: 400;
+  gap: 4px;
+}
+.action-btn:hover {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  background: var(--primary-tint) !important;
+}
+.action-btn.danger:hover {
+  border-color: var(--accent-color) !important;
+  color: var(--accent-color) !important;
+  background: var(--primary-tint) !important;
+}
+
+/* ===== Dialog / Upload ===== */
+.style-dialog :deep(.el-dialog__header) {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.style-dialog :deep(.el-dialog__title) {
+  color: var(--text-ink);
+  font-weight: 600;
+  font-size: 16px;
+}
+.style-dialog :deep(.el-dialog__body) { padding: 20px 24px; }
+.style-dialog :deep(.el-dialog__footer) {
+  padding: 12px 24px 20px;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.upload-section {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.upload-preview {
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  padding: 4px;
+  background: var(--bg-white);
+}
 </style>

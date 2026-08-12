@@ -240,90 +240,109 @@ onMounted(() => {
 
 <style scoped>
 .dashboard {
-  padding: 4px;
+  padding: 8px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .section-title-row {
-  margin-top: 12px;
-  margin-bottom: 12px;
+  margin-top: 32px;
+  margin-bottom: 16px;
 }
 
 .section-title {
-  color: var(--text-secondary);
-  font-size: 16px;
-  font-weight: 600;
+  color: var(--text-ink);
+  font-size: 20px;
+  font-weight: 500;
   padding-left: 4px;
-  border-left: 3px solid var(--primary-color);
-  padding: 2px 0 2px 10px;
+  border-left: 4px solid var(--primary-color);
+  padding: 4px 0 4px 14px;
+  letter-spacing: -0.02em;
 }
 
 /* 统计卡片 */
 .stats-row {
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .stat-card {
-  background: var(--bg-card);
+  background: var(--bg-white);
   border-radius: var(--radius-lg);
-  padding: 18px 16px;
-  margin-bottom: 14px;
+  padding: 24px 20px;
+  margin-bottom: 16px;
   position: relative;
-  border: 1px solid var(--border-color);
-  border-top: 3px solid transparent;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s ease;
+  border: 1px solid var(--border-hairline);
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle at center, var(--primary-tint) 0%, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-left-color: var(--primary-color);
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 400;
   color: var(--primary-color);
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .stat-label {
   font-size: 13px;
   color: var(--text-muted);
-  margin-top: 4px;
+  margin-top: 6px;
+  font-weight: 400;
 }
 
 .stat-icon {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  opacity: 0.4;
+  top: 20px;
+  right: 20px;
+  opacity: 0.2;
 }
 
 /* 项目卡片 */
 .recent-grid {
-  min-height: 120px;
+  min-height: 140px;
 }
 
 .project-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-lg);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
+  padding: 20px;
 }
 
 .project-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--primary-color);
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--shadow-hover);
 }
 
 .project-card-name {
-  color: var(--text-secondary);
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  color: var(--text-ink);
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -333,60 +352,69 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .project-card-time {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 /* 资源卡片 */
 .assets-grid {
-  min-height: 120px;
+  min-height: 140px;
 }
 
 .asset-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md);
   overflow: hidden;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   transition: all 0.3s ease;
 }
 
 .asset-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--primary-color);
-  box-shadow: var(--shadow-glow);
+  box-shadow: var(--shadow-hover);
 }
 
 .asset-thumb {
   width: 100%;
-  height: 120px;
-  background: var(--bg-input);
+  height: 140px;
+  background: var(--bg-surface);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 .asset-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.asset-card:hover .asset-img {
+  transform: scale(1.05);
 }
 
 .asset-info {
-  padding: 10px 12px;
+  padding: 12px 14px;
 }
 
 .asset-name {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: var(--text-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 .asset-type-tag {
@@ -394,6 +422,9 @@ onMounted(() => {
 }
 
 .empty-hint {
-  padding: 40px 0;
+  padding: 60px 0;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 </style>

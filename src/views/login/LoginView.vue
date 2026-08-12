@@ -58,15 +58,15 @@ async function handleLogin() {
 <style scoped>
 .login-container {
   height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse at center, var(--bg-card) 0%, var(--bg-darkest) 70%);
+  background: radial-gradient(ellipse at center, var(--bg-white) 0%, var(--bg-cream) 70%);
 }
 .login-card {
-  width: 400px; padding: 40px; background: var(--bg-card); border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);
+  width: 400px; padding: 40px; background: var(--bg-white); border-radius: var(--radius-xl);
+  border: 1px solid var(--border-hairline); box-shadow: var(--shadow-lg);
 }
 .login-title { color: var(--primary-color); text-align: center; font-size: 24px; margin-bottom: 4px; letter-spacing: 2px; }
 .login-subtitle { color: var(--text-muted); text-align: center; font-size: 14px; margin-bottom: 32px; }
-.login-btn { width: 100%; background: var(--primary-gradient); border: none; }
+.login-btn { width: 100%; background: var(--primary-color); border: none; }
 .login-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-glow); }
 .register-link { text-align: center; margin-top: 16px; color: var(--text-muted); font-size: 13px; }
 </style>
