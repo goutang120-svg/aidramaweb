@@ -233,18 +233,18 @@ const episodeRules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
 }
 
-function statusLabel(status: string): string {
+function statusLabel(status?: string): string {
   const map: Record<string, string> = {
     NOT_STARTED: '未开始', IN_PROGRESS: '进行中', COMPLETED: '已完成',
   }
-  return map[status] || status || '未开始'
+  return map[status || ''] || status || '未开始'
 }
 
-function statusColor(status: string): string {
+function statusColor(status?: string): string {
   const map: Record<string, string> = {
     NOT_STARTED: '#909399', IN_PROGRESS: '#e8a850', COMPLETED: '#67c23a',
   }
-  return map[status] || '#909399'
+  return map[status || ''] || '#909399'
 }
 
 async function fetchSeason() {
