@@ -159,6 +159,17 @@ export function removeShotProp(episodeId: number, shotId: number, propId: number
   return request.delete<Result<void>>('/episodes/shots/props', { params: { id: shotId, episodeId, propId } })
 }
 
+// --- Episode Scene Relations ---
+export function listEpisodeScenes(episodeId: number) {
+  return request.get<Result<number[]>>('/episodes/scenes', { params: { episodeId } })
+}
+export function addEpisodeScene(episodeId: number, sceneId: number) {
+  return request.post<Result<void>>('/episodes/scenes', { sceneId }, { params: { episodeId } })
+}
+export function removeEpisodeScene(episodeId: number, sceneId: number) {
+  return request.delete<Result<void>>('/episodes/scenes', { params: { episodeId, sceneId } })
+}
+
 // --- User Management (Admin) ---
 export function listUsers(params: Record<string, unknown>) {
   return request.get<Result<PageResult<unknown>>>('/admin/users', { params })

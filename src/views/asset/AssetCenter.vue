@@ -1,7 +1,7 @@
 <template>
   <div class="asset-center">
-    <div class="page-toolbar">
-      <h3 class="page-title">资源中心</h3>
+    <div class="page-header">
+      <h2 class="page-title">资源中心</h2>
       <el-button type="primary" @click="openUploadDialog">
         <el-icon><Plus /></el-icon> 上传
       </el-button>
@@ -82,7 +82,7 @@
             <div class="asset-card" @click="handleAssetClick(asset)">
               <div class="card-thumb">
                 <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" loading="lazy" />
-                <el-icon v-else :size="36" color="#4a4a6e"><PictureFilled /></el-icon>
+                <el-icon v-else :size="36" class="thumb-placeholder-icon"><PictureFilled /></el-icon>
                 <el-button class="card-delete-btn" size="small" type="danger" circle
                   @click.stop="handleAssetDelete(asset)">
                   <el-icon :size="12"><Delete /></el-icon>
@@ -91,7 +91,7 @@
               <div class="card-info">
                 <div class="card-name" :title="asset.assetName">{{ asset.assetName }}</div>
                 <div class="card-meta">
-                  <el-tag size="small" :type="assetTagType(asset.assetType)" effect="dark" style="border-color:transparent">
+                  <el-tag size="small" :type="assetTagType(asset.assetType)" effect="plain">
                     {{ assetTypeLabel(asset.assetType) }}
                   </el-tag>
                   <span class="card-version">v{{ asset.currentVersion || 1 }}</span>
@@ -114,7 +114,7 @@
             <div class="video-card" @click="openVideoPreview(asset)">
               <div class="vid-thumb">
                 <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" />
-                <el-icon v-else :size="32" color="#4a4a6e"><VideoCamera /></el-icon>
+                <el-icon v-else :size="32" class="thumb-placeholder-icon"><VideoCamera /></el-icon>
                 <div class="play-overlay">
                   <el-icon :size="32" color="#fff"><VideoPlay /></el-icon>
                 </div>
@@ -139,7 +139,7 @@
       <div v-if="activeTab === 'AUDIO'" class="audio-list">
         <div v-for="asset in assets" :key="asset.id" class="audio-card">
           <div class="audio-icon">
-            <el-icon :size="28" color="#e8a850"><Headset /></el-icon>
+            <el-icon :size="28" class="audio-icon-el"><Headset /></el-icon>
           </div>
           <div class="audio-info">
             <div class="audio-name" :title="asset.assetName">{{ asset.assetName }}</div>
@@ -157,7 +157,7 @@
       <div v-if="activeTab === 'DOCUMENT'" class="file-list">
         <div v-for="asset in assets" :key="asset.id" class="file-card">
           <div class="file-icon">
-            <el-icon :size="28" color="#409eff"><Document /></el-icon>
+            <el-icon :size="28" class="file-icon-el"><Document /></el-icon>
           </div>
           <div class="file-info">
             <div class="file-name" :title="asset.assetName">{{ asset.assetName }}</div>
@@ -238,7 +238,7 @@
             multiple
           >
             <div class="upload-trigger">
-              <el-icon :size="32" color="#4a4a6e"><UploadFilled /></el-icon>
+              <el-icon :size="32" class="upload-icon"><UploadFilled /></el-icon>
               <div class="upload-text">拖拽文件或<em>点击选择</em></div>
             </div>
           </el-upload>
@@ -267,7 +267,7 @@
       </el-form>
 
       <div v-if="uploading" class="batch-progress">
-        <el-progress :percentage="uploadProgress" :color="'#e8a850'" :stroke-width="8" />
+        <el-progress :percentage="uploadProgress" :stroke-width="8" />
         <div class="progress-detail">
           正在上传 {{ uploadStatus }} ({{ uploadedCount }}/{{ selectedFiles.length }})
         </div>
@@ -588,23 +588,28 @@ onMounted(() => {
 
 <style scoped>
 .asset-center { padding: 4px; }
-.page-toolbar {
+
+/* 页面头部 - 与 CharacterList / PropList 保持一致 */
+.page-header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
 }
 .page-title {
-  color: #c0c0d0; font-size: 16px; font-weight: 600;
-  padding-left: 10px; border-left: 3px solid #e8a850;
+  color: var(--primary-color); font-size: 20px; font-weight: 600;
+  padding-left: 12px; border-left: 4px solid var(--primary-color);
 }
 
 /* 筛选栏 */
 .filter-bar {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  padding: 12px 16px; background: #1a1a2e; border: 1px solid #2a2a3e;
-  border-radius: 8px; margin-bottom: 16px;
+  padding: 12px 16px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
 }
 .filter-bar :deep(.el-select) { min-width: 120px; }
-.total-count { color: #6a6a7e; font-size: 13px; margin-left: auto; }
+.total-count { color: var(--text-muted); font-size: 13px; margin-left: auto; }
 
 /* 内容区 */
 .asset-content { min-height: 300px; }
@@ -613,68 +618,92 @@ onMounted(() => {
 /* 图片卡片 */
 .image-grid { min-height: 120px; }
 .asset-card {
-  background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 8px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
   overflow: hidden; margin-bottom: 12px; cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
-.asset-card:hover { border-color: #e8a850; transform: translateY(-2px); }
+.asset-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
 .card-thumb {
-  width: 100%; height: 140px; background: #16162a;
+  width: 100%; height: 140px;
+  background: var(--bg-cream);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   position: relative;
 }
 .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-placeholder-icon { color: var(--text-muted); }
 .card-info { padding: 10px 12px; }
 .card-name {
-  font-size: 13px; color: #c0c0d0; margin-bottom: 6px;
+  font-size: 13px; color: var(--text-body); margin-bottom: 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .card-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.card-version { color: #6a6a7e; font-size: 12px; }
-.card-date { color: #5a5a6e; font-size: 11px; }
+.card-version { color: var(--text-muted); font-size: 12px; }
+.card-date { color: var(--text-secondary); font-size: 11px; }
 
 /* 视频卡片 */
 .video-grid { min-height: 120px; }
 .video-card {
-  background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 8px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
   overflow: hidden; margin-bottom: 12px; cursor: pointer;
-  transition: transform 0.2s, border-color 0.2s;
+  transition: all 0.3s ease;
 }
-.video-card:hover { border-color: #e8a850; transform: translateY(-2px); }
+.video-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
 .vid-thumb {
-  width: 100%; height: 130px; background: #16162a;
+  width: 100%; height: 130px;
+  background: var(--bg-cream);
   display: flex; align-items: center; justify-content: center; overflow: hidden;
   position: relative;
 }
 .vid-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .play-overlay {
-  position: absolute; inset: 0; background: var(--bg-cream);
+  position: absolute; inset: 0;
+  background: rgba(42, 38, 33, 0.45);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; transition: opacity 0.2s;
 }
 .video-card:hover .play-overlay { opacity: 1; }
 .vid-info { padding: 10px 12px; }
 .vid-name {
-  font-size: 13px; color: #c0c0d0; margin-bottom: 4px;
+  font-size: 13px; color: var(--text-body); margin-bottom: 4px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.vid-meta { display: flex; gap: 8px; font-size: 11px; color: #6a6a7e; }
-.vid-duration::after { content: ''; }
+.vid-meta { display: flex; gap: 8px; font-size: 11px; color: var(--text-muted); }
 
 /* 音频列表 */
 .audio-list { margin-bottom: 16px; }
 .audio-card {
   display: flex; align-items: center; gap: 14px;
-  padding: 12px 16px; background: #1a1a2e; border: 1px solid #2a2a3e;
-  border-radius: 8px; margin-bottom: 8px;
+  padding: 12px 16px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
 }
+.audio-card:hover { border-color: var(--primary-color); box-shadow: var(--shadow-hover); }
 .audio-icon { flex-shrink: 0; }
+.audio-icon-el { color: var(--primary-color); }
 .audio-info { flex: 1; min-width: 0; }
 .audio-name {
-  color: #c0c0d0; font-size: 14px; margin-bottom: 2px;
+  color: var(--text-body); font-size: 14px; margin-bottom: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.audio-meta { color: #6a6a7e; font-size: 12px; }
+.audio-meta { color: var(--text-muted); font-size: 12px; }
 .audio-player { width: 180px; height: 32px; flex-shrink: 0; }
 .audio-actions { flex-shrink: 0; }
 
@@ -682,16 +711,23 @@ onMounted(() => {
 .file-list { margin-bottom: 16px; }
 .file-card {
   display: flex; align-items: center; gap: 14px;
-  padding: 12px 16px; background: #1a1a2e; border: 1px solid #2a2a3e;
-  border-radius: 8px; margin-bottom: 8px;
+  padding: 12px 16px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 8px;
+  transition: all 0.2s ease;
 }
+.file-card:hover { border-color: var(--primary-color); box-shadow: var(--shadow-hover); }
 .file-icon { flex-shrink: 0; }
+.file-icon-el { color: var(--primary-color); }
 .file-info { flex: 1; min-width: 0; }
 .file-name {
-  color: #c0c0d0; font-size: 14px; margin-bottom: 2px;
+  color: var(--text-body); font-size: 14px; margin-bottom: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.file-meta { display: flex; gap: 12px; color: #6a6a7e; font-size: 12px; }
+.file-meta { display: flex; gap: 12px; color: var(--text-muted); font-size: 12px; }
 .file-actions { flex-shrink: 0; }
 
 /* 分页 */
@@ -703,28 +739,35 @@ onMounted(() => {
 .preview-wrap { display: flex; flex-direction: column; }
 .preview-viewport {
   text-align: center; max-height: 60vh; overflow: auto; margin-bottom: 12px;
+  background: var(--bg-cream); border-radius: var(--radius-md);
 }
 .preview-img {
   max-width: 100%; object-fit: contain; transition: transform 0.2s;
 }
 .preview-toolbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding-top: 8px; border-top: 1px solid #2a2a3e;
+  padding-top: 8px; border-top: 1px solid var(--border-hairline);
 }
 .preview-right { display: flex; gap: 8px; align-items: center; }
 .preview-video { width: 100%; max-height: 60vh; }
 
 /* 上传对话框 */
 .upload-drag :deep(.el-upload-dragger) {
-  background: #16162a; border-color: #2a2a3e; border-radius: 8px;
+  background: var(--bg-cream);
+  border-color: var(--border-hairline);
+  border-radius: var(--radius-md);
 }
-.upload-drag :deep(.el-upload-dragger:hover) { border-color: #e8a850; }
+.upload-drag :deep(.el-upload-dragger:hover) {
+  border-color: var(--primary-color);
+  background: var(--bg-hover);
+}
 .upload-trigger { padding: 24px; text-align: center; }
-.upload-text { color: #808090; font-size: 14px; margin-top: 8px; }
-.upload-text em { color: #e8a850; font-style: normal; }
+.upload-icon { color: var(--text-muted); }
+.upload-text { color: var(--text-secondary); font-size: 14px; margin-top: 8px; }
+.upload-text em { color: var(--primary-color); font-style: normal; }
 
 .batch-progress { margin-top: 16px; }
-.progress-detail { color: #808090; font-size: 12px; margin-top: 6px; }
+.progress-detail { color: var(--text-secondary); font-size: 12px; margin-top: 6px; }
 
 /* 删除按钮 */
 .card-delete-btn {

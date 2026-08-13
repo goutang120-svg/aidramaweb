@@ -127,6 +127,33 @@
           </div>
         </el-tab-pane>
 
+        <el-tab-pane name="scenes">
+          <template #label><span class="tab-label"><el-icon><Connection /></el-icon>场景</span></template>
+          <div class="tab-content">
+            <div class="tab-toolbar">
+              <div><span class="tab-heading">关联场景</span><span class="tab-subtitle">{{ episodeScenes.length }} 个场景</span></div>
+              <el-button type="primary" size="small" class="btn-save" @click="openSceneDialog"><el-icon><Plus /></el-icon> 添加场景</el-button>
+            </div>
+            <div v-loading="loading.scenes" class="scene-list">
+              <div v-if="episodeScenes.length === 0 && !loading.scenes" class="table-empty">
+                <div class="empty-icon-wrap small"><el-icon size="30"><Connection /></el-icon></div>
+                <p>暂无关联场景</p><span>为本集关联拍摄场景</span>
+              </div>
+              <div v-for="scene in episodeScenes" :key="scene.id" class="scene-row">
+                <div class="scene-info">
+                  <div class="scene-name">{{ scene.name }}</div>
+                  <div class="scene-meta">
+                    <el-tag size="small" effect="plain">{{ scene.location || '未设定地点' }}</el-tag>
+                    <el-tag v-if="scene.timePeriod" size="small" effect="plain" type="info">{{ scene.timePeriod }}</el-tag>
+                    <span v-if="scene.description" class="scene-desc">{{ scene.description }}</span>
+                  </div>
+                </div>
+                <el-button text size="small" type="danger" @click="removeEpisodeSceneRel(scene.id)">移除</el-button>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
+
         <el-tab-pane name="assets">
           <template #label><span class="tab-label"><el-icon><PictureFilled /></el-icon>资产</span></template>
           <div class="tab-content">
@@ -156,6 +183,28 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+
+    <!-- 场景添加对话框 -->
+    <el-dialog v-model="sceneDialogVisible" title="添加场景" width="480px" class="dark-dialog">
+      <el-select
+        v-model="selectedSceneId"
+        placeholder="选择要关联的场景"
+        style="width:100%"
+        filterable
+        clearable
+      >
+        <el-option
+          v-for="s in availableScenes"
+          :key="s.id"
+          :label="s.name + (s.location ? ' - ' + s.location : '')"
+          :value="s.id"
+        />
+      </el-select>
+      <template #footer>
+        <el-button @click="sceneDialogVisible = false">取消</el-button>
+        <el-button type="primary" :disabled="!selectedSceneId" @click="addEpisodeSceneRel">确定</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 镜头添加/编辑对话框 -->
     <el-dialog
@@ -254,12 +303,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft, Plus, PictureFilled, Delete, Document, VideoCamera,
-  Film, Upload, CircleCheck, Check, Clock, FolderOpened,
+  Film, Upload, CircleCheck, Check, Clock, FolderOpened, Connection,
 } from '@element-plus/icons-vue'
 import {
   getOne, listAll, createOne, updateOne, deleteOne,
   getAssets, getUploadUrl, createAsset,
   getEpisodeProgress,
+  listEpisodeScenes, addEpisodeScene, removeEpisodeScene,
 } from '@/api/index'
 import type { AssetVO } from '@/types'
 import type { EpisodeProgressVO } from '@/api/index'
@@ -300,6 +350,7 @@ const loading = reactive({
   scriptVersions: false,
   storyboardVersions: false,
   shots: false,
+  scenes: false,
   assets: false,
 })
 
@@ -341,6 +392,12 @@ const importingShots = ref(false)
 
 // --- Assets ---
 const episodeAssets = ref<AssetVO[]>([])
+
+// --- Scenes ---
+const episodeScenes = ref<any[]>([])
+const sceneDialogVisible = ref(false)
+const selectedSceneId = ref<number | null>(null)
+const availableScenes = ref<any[]>([])
 
 // Helpers
 function statusLabel(status: string): string {
@@ -540,6 +597,48 @@ async function fetchEpisodeAssets() {
   } catch { /* handled */ } finally { loading.assets = false }
 }
 
+// --- Episode Scenes ---
+async function fetchEpisodeScenes() {
+  loading.scenes = true
+  try {
+    const res = await listEpisodeScenes(episodeId)
+    const sceneIds = (res.data.data as number[]) || []
+    if (sceneIds.length === 0) { episodeScenes.value = []; return }
+    const scenesRes = await listAll('/projects/scenes', { projectId: episode.value.projectId, page: 1, pageSize: 200 })
+    const allScenes = ((scenesRes.data.data as any).records || []) as any[]
+    episodeScenes.value = allScenes.filter((s: any) => sceneIds.includes(s.id))
+  } catch { /* handled */ } finally { loading.scenes = false }
+}
+
+async function openSceneDialog() {
+  selectedSceneId.value = null
+  try {
+    const res = await listAll('/projects/scenes', { projectId: episode.value.projectId, page: 1, pageSize: 200 })
+    const allScenes = ((res.data.data as any).records || []) as any[]
+    const linkedIds = episodeScenes.value.map((s: any) => s.id)
+    availableScenes.value = allScenes.filter((s: any) => !linkedIds.includes(s.id))
+  } catch { availableScenes.value = [] }
+  sceneDialogVisible.value = true
+}
+
+async function addEpisodeSceneRel() {
+  if (!selectedSceneId.value) return
+  try {
+    await addEpisodeScene(episodeId, selectedSceneId.value)
+    ElMessage.success('场景已关联')
+    sceneDialogVisible.value = false
+    await fetchEpisodeScenes()
+  } catch { /* handled */ }
+}
+
+async function removeEpisodeSceneRel(sceneId: number) {
+  try {
+    await removeEpisodeScene(episodeId, sceneId)
+    ElMessage.success('已移除关联')
+    await fetchEpisodeScenes()
+  } catch { /* handled */ }
+}
+
 // --- Episode Asset Delete ---
 async function handleEpisodeAssetDelete(asset: AssetVO) {
   try {
@@ -608,6 +707,7 @@ onMounted(() => {
   fetchScripts()
   fetchStoryboards()
   fetchShots()
+  fetchEpisodeScenes()
   fetchEpisodeAssets()
 })
 </script>
@@ -665,4 +765,18 @@ onMounted(() => {
 .version-item.active .version-indicator { background: var(--primary-color); box-shadow: 0 0 8px var(--primary-color); }
 .v-number { min-width: 45px; color: var(--primary-color); font-size: 13px; font-weight: 600; }
 .v-time { flex: 1; color: var(--text-muted); font-size: 12px; }
+
+/* Scene list */
+.scene-list { min-height: 100px; }
+.scene-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; margin-bottom: 8px;
+  background: var(--bg-white); border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-md); transition: all 0.2s ease;
+}
+.scene-row:hover { border-color: var(--primary-color); box-shadow: var(--shadow-soft); }
+.scene-info { flex: 1; min-width: 0; }
+.scene-name { color: var(--text-body); font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+.scene-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.scene-desc { color: var(--text-muted); font-size: 12px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>

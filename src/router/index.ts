@@ -34,6 +34,7 @@ const router = createRouter({
         { path: 'props/:id', name: 'PropDetail', component: () => import('@/views/prop/PropDetail.vue'), meta: { title: '道具详情' } },
         { path: 'styles', name: 'Styles', component: () => import('@/views/style/StyleList.vue'), meta: { title: '风格参考' } },
         { path: 'seasons', name: 'Seasons', component: () => import('@/views/season/SeasonList.vue'), meta: { title: '分季' } },
+        { path: 'seasons/:id', name: 'SeasonDetail', component: () => import('@/views/season/SeasonDetail.vue'), meta: { title: '分季详情' } },
         { path: 'episodes', name: 'Episodes', component: () => import('@/views/episode/EpisodeList.vue'), meta: { title: '分集' } },
         { path: 'episodes/:id', name: 'EpisodeDetail', component: () => import('@/views/episode/EpisodeDetail.vue'), meta: { title: '分集详情' } },
         { path: 'shots', name: 'Shots', component: () => import('@/views/shot/ShotList.vue'), meta: { title: '镜头' } },

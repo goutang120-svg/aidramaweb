@@ -27,6 +27,7 @@
               </div>
               <div v-if="season.description" class="season-desc">{{ season.description }}</div>
               <div class="season-actions" @click.stop>
+                <el-button text size="small" type="primary" @click="goDetail(season)">详情</el-button>
                 <el-button text size="small" @click="openEditDialog(season)">编辑</el-button>
                 <el-button text size="small" type="danger" @click="handleDelete(season)">删除</el-button>
               </div>
@@ -235,6 +236,10 @@ async function handleDelete(season: any) {
   } catch {
     // cancelled or error
   }
+}
+
+function goDetail(season: any) {
+  router.push(`/seasons/${season.id}`)
 }
 
 function goEpisodes(season: any) {
