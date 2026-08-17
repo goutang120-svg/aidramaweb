@@ -14,9 +14,18 @@
         placeholder="项目"
         style="width:160px"
         clearable
-        @change="fetchAssets"
+        @change="handleProjectChange"
       >
         <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
+      </el-select>
+      <el-select
+        v-model="filters.seasonId"
+        placeholder="分季"
+        style="width:160px"
+        clearable
+        @change="handleSeasonChange"
+      >
+        <el-option v-for="s in seasons" :key="s.id" :label="s.name || `第${s.seasonNo}季`" :value="s.id" />
       </el-select>
       <el-select
         v-model="filters.episodeId"
@@ -25,7 +34,7 @@
         clearable
         @change="fetchAssets"
       >
-        <el-option v-for="ep in episodes" :key="ep.id" :label="`#${ep.episodeNo} ${ep.title}`" :value="ep.id" />
+        <el-option v-for="ep in episodesForSeason(filters.seasonId)" :key="ep.id" :label="episodeLabel(ep)" :value="ep.id" />
       </el-select>
       <el-select
         v-model="filters.keyword"
@@ -83,6 +92,10 @@
               <div class="card-thumb">
                 <img v-if="asset.previewUrl" :src="asset.previewUrl" :alt="asset.assetName" loading="lazy" />
                 <el-icon v-else :size="36" class="thumb-placeholder-icon"><PictureFilled /></el-icon>
+                <el-button class="card-edit-btn" size="small" type="primary" circle
+                  @click.stop="openEditDialog(asset)">
+                  <el-icon :size="12"><Edit /></el-icon>
+                </el-button>
                 <el-button class="card-delete-btn" size="small" type="danger" circle
                   @click.stop="handleAssetDelete(asset)">
                   <el-icon :size="12"><Delete /></el-icon>
@@ -118,6 +131,10 @@
                 <div class="play-overlay">
                   <el-icon :size="32" color="#fff"><VideoPlay /></el-icon>
                 </div>
+                <el-button class="card-edit-btn" size="small" type="primary" circle
+                  @click.stop="openEditDialog(asset)">
+                  <el-icon :size="12"><Edit /></el-icon>
+                </el-button>
                 <el-button class="card-delete-btn" size="small" type="danger" circle
                   @click.stop="handleAssetDelete(asset)">
                   <el-icon :size="12"><Delete /></el-icon>
@@ -148,6 +165,7 @@
           <audio v-if="asset.previewUrl" :src="asset.previewUrl" controls class="audio-player" preload="none" />
           <div class="audio-actions">
             <el-button text size="small" type="primary" @click="downloadAsset(asset)">下载</el-button>
+            <el-button text size="small" @click="openEditDialog(asset)">编辑</el-button>
             <el-button text size="small" type="danger" @click="handleAssetDelete(asset)">删除</el-button>
           </div>
         </div>
@@ -171,6 +189,7 @@
             <el-button text size="small" type="primary" @click="downloadAsset(asset)">
               <el-icon><Download /></el-icon> 下载
             </el-button>
+            <el-button text size="small" @click="openEditDialog(asset)">编辑</el-button>
             <el-button text size="small" type="danger" @click="handleAssetDelete(asset)">删除</el-button>
           </div>
         </div>
@@ -252,13 +271,18 @@
           </el-select>
         </el-form-item>
         <el-form-item label="关联项目">
-          <el-select v-model="uploadForm.projectId" style="width:100%" clearable placeholder="选择关联项目">
+          <el-select v-model="uploadForm.projectId" style="width:100%" clearable placeholder="选择关联项目" @change="handleUploadProjectChange">
             <el-option v-for="p in projects" :key="p.id" :label="p.name" :value="p.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联分季">
+          <el-select v-model="uploadForm.seasonId" style="width:100%" clearable placeholder="选择关联分季" @change="handleUploadSeasonChange">
+            <el-option v-for="s in seasons" :key="s.id" :label="s.name || `第${s.seasonNo}季`" :value="s.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="关联分集">
           <el-select v-model="uploadForm.episodeId" style="width:100%" clearable placeholder="选择关联分集">
-            <el-option v-for="ep in episodes" :key="ep.id" :label="`#${ep.episodeNo} ${ep.title}`" :value="ep.id" />
+            <el-option v-for="ep in episodesForSeason(uploadForm.seasonId)" :key="ep.id" :label="episodeLabel(ep)" :value="ep.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="关联镜头">
@@ -280,6 +304,35 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 编辑/关联对话框 -->
+    <el-dialog v-model="editDialogVisible" title="编辑资源" width="480px" class="dark-dialog">
+      <el-form :model="editForm" label-width="100px">
+        <el-form-item label="资源名称">
+          <el-input v-model="editForm.assetName" />
+        </el-form-item>
+        <el-form-item label="所属项目">
+          <el-input :model-value="projectName(editForm.projectId)" disabled />
+        </el-form-item>
+        <el-form-item label="关联分季">
+          <el-select v-model="editForm.seasonId" style="width:100%" clearable placeholder="选择关联分季" @change="handleEditSeasonChange">
+            <el-option v-for="s in seasons" :key="s.id" :label="s.name || `第${s.seasonNo}季`" :value="s.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联分集">
+          <el-select v-model="editForm.episodeId" style="width:100%" clearable placeholder="选择关联分集">
+            <el-option v-for="ep in episodesForSeason(editForm.seasonId)" :key="ep.id" :label="episodeLabel(ep)" :value="ep.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关联镜头">
+          <el-input-number v-model="editForm.shotId" style="width:100%" :min="1" placeholder="输入镜头ID" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="savingEdit" @click="saveEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -288,10 +341,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, PictureFilled, VideoCamera, VideoPlay, Headset,
-  ZoomIn, ZoomOut, FullScreen, UploadFilled, Download, Document, Delete,
+  ZoomIn, ZoomOut, FullScreen, UploadFilled, Download, Document, Delete, Edit,
 } from '@element-plus/icons-vue'
 import {
-  getAssets, getUploadUrl, createAsset, getAssetVersions, setCurrentVersion, deleteOne,
+  getAssets, getUploadUrl, createAsset, updateAsset, getAssetVersions, setCurrentVersion, deleteOne,
   getTags, listAll, getProject,
 } from '@/api/index'
 import { useAppStore } from '@/stores/app'
@@ -309,6 +362,7 @@ const pageSize = ref(40)
 
 const filters = reactive({
   projectId: appStore.currentProjectId,
+  seasonId: null as number | null,
   episodeId: null as number | null,
   keyword: '',
   keywordInput: '',
@@ -316,6 +370,7 @@ const filters = reactive({
 })
 
 const projects = ref<any[]>([])
+const seasons = ref<any[]>([])
 const episodes = ref<any[]>([])
 const tags = ref<any[]>([])
 
@@ -339,6 +394,19 @@ const selectedFiles = ref<File[]>([])
 const uploadForm = reactive({
   assetType: 'IMAGE',
   projectId: null as number | null,
+  seasonId: null as number | null,
+  episodeId: null as number | null,
+  shotId: null as number | null,
+})
+
+// Edit / re-associate
+const editDialogVisible = ref(false)
+const savingEdit = ref(false)
+const editAssetId = ref<number | null>(null)
+const editForm = reactive({
+  assetName: '',
+  projectId: null as number | null,
+  seasonId: null as number | null,
   episodeId: null as number | null,
   shotId: null as number | null,
 })
@@ -431,19 +499,99 @@ async function fetchFilters() {
   } catch { /* handled */ }
 }
 
-async function fetchEpisodesForFilters() {
-  if (!filters.projectId) return
+async function loadSeasons(projectId: number | null): Promise<any[]> {
+  if (!projectId) return []
   try {
-    const seasonsRes = await listAll('/projects/seasons', { projectId: filters.projectId })
-    const sRecords = (seasonsRes.data.data as any).records || []
-    const allEps: any[] = []
-    for (const s of sRecords) {
-      const epRes = await listAll('/seasons/episodes', { seasonId: s.id })
-      const epRecords = (epRes.data.data as any).records || []
-      allEps.push(...epRecords.map((ep: any) => ({ ...ep, seasonId: s.id, seasonName: s.name })))
-    }
-    episodes.value = allEps
-  } catch { /* handled */ }
+    const res = await listAll('/projects/seasons', { projectId, page: 1, pageSize: 500 })
+    return ((res.data.data as any).records || []) as any[]
+  } catch { return [] }
+}
+
+async function loadEpisodes(seasonsArr: any[]): Promise<any[]> {
+  const allEps: any[] = []
+  for (const s of seasonsArr) {
+    try {
+      const epRes = await listAll('/seasons/episodes', { seasonId: s.id, page: 1, pageSize: 500 })
+      const epRecords = ((epRes.data.data as any).records || []) as any[]
+      allEps.push(...epRecords.map((ep: any) => ({ ...ep, seasonId: s.id, seasonNo: s.seasonNo, seasonName: s.name })))
+    } catch { /* ignore */ }
+  }
+  return allEps
+}
+
+async function refreshSeasonsAndEpisodes() {
+  seasons.value = await loadSeasons(filters.projectId)
+  episodes.value = await loadEpisodes(seasons.value)
+}
+
+function episodesForSeason(seasonId: number | null | undefined): any[] {
+  if (!seasonId) return episodes.value
+  return episodes.value.filter((e) => e.seasonId === seasonId)
+}
+
+function episodeLabel(ep: any): string {
+  return ep.seasonNo != null ? `S${ep.seasonNo} #${ep.episodeNo} ${ep.title || ''}` : `#${ep.episodeNo} ${ep.title || ''}`
+}
+
+function projectName(id: number | null | undefined): string {
+  if (!id) return '-'
+  const p = projects.value.find((x) => x.id === id)
+  return p?.name || `项目 #${id}`
+}
+
+async function handleProjectChange() {
+  filters.seasonId = null
+  filters.episodeId = null
+  await refreshSeasonsAndEpisodes()
+  await fetchAssets()
+}
+
+async function handleSeasonChange() {
+  filters.episodeId = null
+  await fetchAssets()
+}
+
+async function handleUploadProjectChange() {
+  uploadForm.seasonId = null
+  uploadForm.episodeId = null
+  seasons.value = await loadSeasons(uploadForm.projectId)
+  episodes.value = await loadEpisodes(seasons.value)
+}
+
+function handleUploadSeasonChange() {
+  uploadForm.episodeId = null
+}
+
+function handleEditSeasonChange() {
+  editForm.episodeId = null
+}
+
+async function openEditDialog(asset: AssetVO) {
+  editAssetId.value = asset.id
+  editForm.assetName = asset.assetName
+  editForm.projectId = asset.projectId ?? null
+  editForm.seasonId = asset.seasonId ?? null
+  editForm.episodeId = asset.episodeId ?? null
+  editForm.shotId = asset.shotId ?? null
+  seasons.value = await loadSeasons(asset.projectId ?? filters.projectId)
+  episodes.value = await loadEpisodes(seasons.value)
+  editDialogVisible.value = true
+}
+
+async function saveEdit() {
+  if (!editAssetId.value) return
+  savingEdit.value = true
+  try {
+    await updateAsset(editAssetId.value, {
+      assetName: editForm.assetName,
+      seasonId: editForm.seasonId,
+      episodeId: editForm.episodeId,
+      shotId: editForm.shotId,
+    })
+    ElMessage.success('保存成功')
+    editDialogVisible.value = false
+    await fetchAssets()
+  } catch { /* handled */ } finally { savingEdit.value = false }
 }
 
 // --- Upload ---
@@ -488,12 +636,17 @@ function handleFileSelect(file: any) {
   }
 }
 
-function openUploadDialog() {
+async function openUploadDialog() {
   uploadForm.assetType = 'IMAGE'
   uploadForm.projectId = filters.projectId
+  uploadForm.seasonId = filters.seasonId
   uploadForm.episodeId = filters.episodeId
   uploadForm.shotId = null
   selectedFiles.value = []
+  if (uploadForm.projectId) {
+    seasons.value = await loadSeasons(uploadForm.projectId)
+    episodes.value = await loadEpisodes(seasons.value)
+  }
   uploadDialogVisible.value = true
 }
 
@@ -516,6 +669,7 @@ async function handleBatchUpload() {
 
     const extraMeta: Record<string, any> = {}
     if (uploadForm.projectId) extraMeta.projectId = uploadForm.projectId
+    if (uploadForm.seasonId) extraMeta.seasonId = uploadForm.seasonId
     if (uploadForm.episodeId) extraMeta.episodeId = uploadForm.episodeId
     if (uploadForm.shotId) extraMeta.shotId = uploadForm.shotId
 
@@ -579,9 +733,9 @@ function zoomIn() { zoomLevel.value = Math.min(zoomLevel.value + 0.25, 3) }
 function zoomOut() { zoomLevel.value = Math.max(zoomLevel.value - 0.25, 0.25) }
 function resetZoom() { zoomLevel.value = 1 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchFilters()
-  fetchEpisodesForFilters()
+  await refreshSeasonsAndEpisodes()
   fetchAssets()
 })
 </script>
@@ -769,10 +923,15 @@ onMounted(() => {
 .batch-progress { margin-top: 16px; }
 .progress-detail { color: var(--text-secondary); font-size: 12px; margin-top: 6px; }
 
-/* 删除按钮 */
+/* 删除/编辑按钮 */
 .card-delete-btn {
   position: absolute; top: 4px; right: 4px; opacity: 0; transition: opacity 0.2s;
 }
+.card-edit-btn {
+  position: absolute; top: 4px; right: 34px; opacity: 0; transition: opacity 0.2s;
+}
 .card-thumb:hover .card-delete-btn,
-.vid-thumb:hover .card-delete-btn { opacity: 1; }
+.vid-thumb:hover .card-delete-btn,
+.card-thumb:hover .card-edit-btn,
+.vid-thumb:hover .card-edit-btn { opacity: 1; }
 </style>

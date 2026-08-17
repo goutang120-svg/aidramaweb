@@ -70,6 +70,7 @@ export interface AssetVO {
   currentVersion: number
   previewUrl: string
   projectId: number
+  seasonId: number
   episodeId: number
   shotId: number
   createdAt: string

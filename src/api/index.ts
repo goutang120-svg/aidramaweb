@@ -106,6 +106,9 @@ export function getUploadUrl(data: Record<string, unknown>) {
 export function createAsset(data: Record<string, unknown>) {
   return request.post<Result<AssetVO>>('/assets', data)
 }
+export function updateAsset(id: number, data: Record<string, unknown>) {
+  return request.put<Result<AssetVO>>('/assets', data, { params: { id } })
+}
 export function getAssets(params: Record<string, unknown>) {
   return request.get<Result<PageResult<AssetVO>>>('/assets', { params })
 }
