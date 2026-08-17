@@ -263,10 +263,8 @@ async function createBible() {
   try {
     await createOne('/projects/bibles', {
       ...form.value,
-      projectId: currentProjectId.value,
-      version: 1,
       status: 'DRAFT',
-    })
+    }, { projectId: currentProjectId.value })
     ElMessage.success('创建成功')
     dialogVisible.value = false
     await fetchBibles()
